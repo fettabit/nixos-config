@@ -50,7 +50,7 @@
 		enable = true;
 		shellAliases = {
 			jftx = "echo i use nixos with hyprland btw";
-            rb = "sudo nixos-rebuild switch --flake ~/nixos#blackgarden";
+            rb = "nixos-rebuild switch --flake ~/nixos#blackgarden --sudo";
 			nixcfg = "cd ~/nixos && code .";
 			hyprcfg = "cd ~/.config/hypr && code .";
 		};

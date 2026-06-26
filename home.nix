@@ -21,6 +21,14 @@
 		in
 		{
 			enable = true;
+			enabledCustomApps = with spicePkgs.apps; [
+				marketplace
+			];
+			enabledExtensions = with spicePkgs.extensions; [
+				adblockify
+				shuffle
+			];
+			theme = spicePkgs.themes.text;
 		};
 	home.sessionVariables.NIXOS_OZONE_WL = "1";
 	programs.bash = {
@@ -35,6 +43,5 @@
 			fi
 		'';
 	};
-
 
 }

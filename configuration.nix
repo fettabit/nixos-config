@@ -86,6 +86,7 @@
     curl
     btop
     kitty
+    python3
     nautilus
     git
     waybar

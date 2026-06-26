@@ -75,12 +75,10 @@
     unzip
     curl
     btop
-    ghostty
     kitty
     nautilus
     git
     waybar
-    yazi
     hyprpolkitagent
     grim
     slurp

@@ -15,6 +15,22 @@
 		vesktop
 		inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
 	];
+	programs.kitty = {
+		enable = true;
+		font = {
+			name = "JetBrainsMono Nerd Font";
+			size = 16;
+		};
+		settings = {
+			background_opacity = "0.85";
+			cursor_shape = "beam";
+			window_padding_width = 10;
+			confirm_os_window_close = 0;
+			scrollback_lines = 10000;
+			enable_audio_bell = "no";
+			tab_bar_style = "powerline";
+		};
+	};
 	programs.spicetify = 
 		let
 			spicePkgs = inputs.spicetify-nix.legacyPackages.${pkgs.stdenv.hostPlatform.system};
@@ -36,7 +52,8 @@
 		shellAliases = {
 			jftx = "echo i use nixos with hyprland btw";
             rb = "sudo nixos-rebuild switch --flake ~/nixos#blackgarden";
-			nixconfig = "cd ~/nixos && code .";
+			nixcfg = "cd ~/nixos && code .";
+			hyprcfg = "cd ~/.config/hypr && code .";
 		};
 		profileExtra = ''
 			if uwsm check may-start && [ "$XDG_VTNR" = 1 ]; then

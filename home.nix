@@ -35,7 +35,8 @@
 		enable = true;
 		shellAliases = {
 			jftx = "echo i use nixos with hyprland btw";
-            rebuild = "sudo nixos-rebuild switch --flake ~/nixos#blackgarden";
+            rb = "sudo nixos-rebuild switch --flake ~/nixos#blackgarden";
+			nixconfig = "cd ~/nixos && code .";
 		};
 		profileExtra = ''
 			if uwsm check may-start && [ "$XDG_VTNR" = 1 ]; then

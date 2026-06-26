@@ -62,8 +62,12 @@
   environment.systemPackages = with pkgs; [
     vim 
     wget
+    unzip
+    curl
     btop
     ghostty
+    kitty
+    nautilus
     git
     waybar
     yazi

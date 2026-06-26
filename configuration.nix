@@ -79,6 +79,7 @@
     nautilus
     git
     waybar
+    fastfetch
     hyprpolkitagent
     grim
     slurp

@@ -13,7 +13,6 @@
 		zotero
 		firefox
 		vesktop
-		inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
 	];
 	programs.kitty = {
 		enable = true;

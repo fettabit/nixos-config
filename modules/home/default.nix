@@ -2,9 +2,11 @@
 {
     imports = [
         ./packages.nix
+        ./programs/git.nix
         ./programs/kitty.nix
         ./programs/spicetify.nix
         ./programs/bash.nix
+        ./services/ssh-agent.nix
     ];
 
     home.username = "jftx";

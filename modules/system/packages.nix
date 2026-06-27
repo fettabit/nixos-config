@@ -9,7 +9,6 @@
         kitty
         python3
         nautilus
-        git
         waybar
         fastfetch
         hyprpolkitagent

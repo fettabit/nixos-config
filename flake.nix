@@ -17,14 +17,14 @@
 			system = "x86_64-linux";
 			specialArgs = { inherit inputs; };
 			modules = [
-				./configuration.nix
+				./hosts/blackgarden 
 				home-manager.nixosModules.home-manager
 				{
 					home-manager = {
 						useGlobalPkgs = true;
 						useUserPackages = true;
                         extraSpecialArgs = { inherit inputs; };
-						users.jftx = import ./home.nix;
+						users.jftx = import ./modules/home;
 						backupFileExtension = "backup";
 					};
 				}

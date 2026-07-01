@@ -10,7 +10,6 @@
     users.users.jftx = {
         isNormalUser = true;
         extraGroups = [ "wheel" ];
-        initialPassword = "1234";
         packages = [];
     };
 

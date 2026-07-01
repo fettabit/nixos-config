@@ -18,6 +18,7 @@
         hyprpaper
         rofi
         playerctl
+        alejandra
         swaynotificationcenter
         networkmanagerapplet
         wl-clipboard

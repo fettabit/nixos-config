@@ -1,10 +1,11 @@
-{ pkgs, ... }:
-{
-    home.packages = with pkgs; [
-        neovim
-        vscode
-        zotero
-        firefox
-        vesktop
-    ];
+{pkgs, ...}: {
+  home.packages = with pkgs; [
+    neovim
+    vscode
+    zotero
+    firefox
+    vesktop
+    uv
+    nodejs
+  ];
 }

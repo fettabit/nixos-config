@@ -9,6 +9,16 @@
     builtins.elem (lib.getName pkg) [
       "pnpm"
     ];
-  system.autoUpgrade.flake = "github:fettabit/nixos-config#blackgarden";
-  system.autoUpgrade.dates = "weekly";
+  system.autoUpgrade = {
+    enable = true;
+    flake = "/home/jftx/nixos#blackgarden";
+    flags = [
+      "--update-input"
+      "nixpkgs"
+      "--no-write-lock-file"
+      "-L"
+    ];
+    dates = "weekly";
+    randomizedDelaySec = "45min";
+  };
 }

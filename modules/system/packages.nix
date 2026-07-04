@@ -17,6 +17,7 @@
     awww
     rofi
     playerctl
+    stylua
     alejandra
     swaynotificationcenter
     networkmanagerapplet

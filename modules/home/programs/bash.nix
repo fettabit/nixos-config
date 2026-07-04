@@ -5,7 +5,7 @@
       gs = "git status";
       gp = "git push -u origin main";
       trb = "nixos-rebuild build --flake ~/nixos#blackgarden --sudo";
-      rb = "nixos-rebuild switch --flake ~/nixos#blackgarden --sudo";
+      rb = "nixos-rebuild switch --flake ~/nixos#blackgarden --sudo && hyprctl reload";
       nixcfg = "cd ~/nixos && code .";
       hyprcfg = "cd ~/nixos/modules/home/desktop/hypr && code .";
     };

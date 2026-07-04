@@ -12,6 +12,7 @@
     ./services/ssh-agent.nix
     ./services/wallpaper.nix
     ./desktop/hyprland.nix
+    ./desktop/waybar.nix
   ];
 
   home.username = "jftx";

@@ -3,6 +3,7 @@
     vim
     gh
     wget
+    cava
     unzip
     curl
     btop

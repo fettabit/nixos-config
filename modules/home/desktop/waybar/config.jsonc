@@ -5,19 +5,20 @@
   "modules-right": [],
 
   "hyprland/workspaces": {
-    "format": "{name}",
+    "format": "{icon}",
     "format-icons": {
       "1": "",
       "2": "",
       "3": "",
       "4": "",
-      "5": "",
-      "active": "",
-      "default": ""
+      "5": ""
     }
 
   },
   "clock": {
-    "format-alt": "{:%a, %d. %b  %H:%M}"
+    "format": "{:%H}"
+  },
+  "clock#right": {
+    "format": "{:%M}"
   }
 }

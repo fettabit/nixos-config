@@ -30,7 +30,13 @@ fi
 mkdir -p "$(dirname "$STATE")"
 printf '%s\n' "$pick" > "$STATE"
 
-exec awww img "$pick" \
+awww img "$pick" \
   --transition-type any \
   --transition-fps 60 \
   --transition-duration 1
+
+# Regenerate the desktop palette from the new wallpaper. Matugen is the
+# canonical color source; matugen-reload pushes it to running consumers.
+# A matugen failure must not break wallpaper rotation.
+matugen image "$pick" --mode dark --prefer saturation || echo "matugen failed for $pick" >&2
+matugen-reload

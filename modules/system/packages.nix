@@ -18,6 +18,7 @@
     slurp
     claude-code
     awww
+    matugen
     rofi
     playerctl
     stylua

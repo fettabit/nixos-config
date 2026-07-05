@@ -9,10 +9,12 @@
     ./programs/kitty.nix
     ./programs/spicetify.nix
     ./programs/bash.nix
+    ./programs/matugen.nix
     ./services/ssh-agent.nix
     ./services/wallpaper.nix
     ./desktop/hyprland.nix
     ./desktop/waybar.nix
+    ./desktop/theme.nix
   ];
 
   home.username = "jftx";

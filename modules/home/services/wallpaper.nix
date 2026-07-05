@@ -1,17 +1,23 @@
 {pkgs, ...}: let
+  matugen-reload = pkgs.writeShellApplication {
+    name = "matugen-reload";
+    runtimeInputs = [pkgs.coreutils pkgs.psmisc pkgs.glib pkgs.systemd pkgs.hyprland];
+    text = builtins.readFile ./scripts/matugen-reload.sh;
+  };
+
   wallpaper-random = pkgs.writeShellApplication {
     name = "wallpaper-random";
-    runtimeInputs = [pkgs.awww pkgs.coreutils pkgs.findutils];
+    runtimeInputs = [pkgs.awww pkgs.coreutils pkgs.findutils pkgs.matugen matugen-reload];
     text = builtins.readFile ./scripts/wallpaper-random.sh;
   };
 
   wallpaper-picker = pkgs.writeShellApplication {
     name = "wallpaper-picker";
-    runtimeInputs = [pkgs.awww pkgs.coreutils pkgs.findutils pkgs.rofi];
+    runtimeInputs = [pkgs.awww pkgs.coreutils pkgs.findutils pkgs.rofi pkgs.matugen matugen-reload];
     text = builtins.readFile ./scripts/wallpaper-picker.sh;
   };
 in {
-  home.packages = [wallpaper-random wallpaper-picker];
+  home.packages = [wallpaper-random wallpaper-picker matugen-reload];
 
   systemd.user.services.wallpaper = {
     Unit = {

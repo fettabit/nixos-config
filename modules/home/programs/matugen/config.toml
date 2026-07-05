@@ -1,0 +1,61 @@
+# Matugen template registry. Templates are declarative (this repo);
+# outputs are runtime artifacts — /tmp and ~/.cache only, never into
+# store-symlinked trees like ~/.config/hypr. Every consumer must
+# tolerate a missing output file (first boot before generation).
+#
+# input_path is relative to this file, so the same config works from
+# ~/.config/matugen (deployed) and from the repo checkout (testing).
+
+[config]
+reload_apps = false
+
+[templates.quickshell]
+input_path = "templates/qs_colors.json.template"
+output_path = "/tmp/qs_colors.json"
+
+[templates.hyprland]
+input_path = "templates/hypr-colors.lua.template"
+output_path = "~/.cache/matugen/hypr-colors.lua"
+
+[templates.kitty]
+input_path = "templates/kitty-colors.conf.template"
+output_path = "/tmp/kitty-matugen-colors.conf"
+
+[templates.gtk]
+input_path = "templates/gtk.css.template"
+output_path = "~/.cache/matugen/colors-gtk.css"
+
+[templates.qt5ct]
+input_path = "templates/qtct.conf.template"
+output_path = "~/.config/qt5ct/colors/matugen.conf"
+
+[templates.qt6ct]
+input_path = "templates/qtct.conf.template"
+output_path = "~/.config/qt6ct/colors/matugen.conf"
+
+[templates.qt5_style]
+input_path = "templates/qt-style.qss.template"
+output_path = "~/.config/qt5ct/qss/matugen-style.qss"
+
+[templates.qt6_style]
+input_path = "templates/qt-style.qss.template"
+output_path = "~/.config/qt6ct/qss/matugen-style.qss"
+
+[templates.swayosd]
+input_path = "templates/swayosd.css.template"
+output_path = "~/.config/swayosd/style.css"
+
+[templates.vesktop]
+input_path = "templates/discord.css.template"
+output_path = "~/.config/vesktop/themes/matugen.theme.css"
+
+[templates.cava]
+input_path = "templates/cava-colors.ini.template"
+output_path = "~/.config/cava/colors"
+
+# Firefox has no profile yet (never launched). When one exists, point
+# output_path at ~/.mozilla/firefox/<profile>/chrome/matugen.css and set
+# toolkit.legacyUserProfileCustomizations.stylesheets = true.
+# [templates.firefox]
+# input_path = "templates/firefox.css"
+# output_path = "~/.mozilla/firefox/PROFILE.default/chrome/matugen.css"

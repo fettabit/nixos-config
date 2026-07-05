@@ -11,6 +11,7 @@
     python3
     nautilus
     waybar
+    quickshell
     fastfetch
     hyprpolkitagent
     grim

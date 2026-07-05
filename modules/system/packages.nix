@@ -22,6 +22,7 @@
     playerctl
     stylua
     alejandra
+    qt6.qtdeclarative
     swaynotificationcenter
     networkmanagerapplet
     wl-clipboard

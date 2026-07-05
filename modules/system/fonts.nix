@@ -2,6 +2,9 @@
 {
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
+    # the quickshell QML hardcodes these two family names
+    jetbrains-mono
+    nerd-fonts.iosevka
     (pkgs.stdenvNoCC.mkDerivation {
       name = "anthropic-fonts";
       src = ../../fonts/anthropic;

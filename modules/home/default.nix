@@ -15,6 +15,7 @@
     ./desktop/hyprland.nix
     ./desktop/waybar.nix
     ./desktop/theme.nix
+    ./desktop/quickshell.nix
   ];
 
   home.username = "jftx";

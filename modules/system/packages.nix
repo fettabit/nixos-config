@@ -11,7 +11,6 @@
     python3
     nautilus
     waybar
-    quickshell
     fastfetch
     hyprpolkitagent
     grim
@@ -23,7 +22,6 @@
     playerctl
     stylua
     alejandra
-    qt6.qtdeclarative
     swaynotificationcenter
     networkmanagerapplet
     wl-clipboard

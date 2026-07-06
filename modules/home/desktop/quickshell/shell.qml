@@ -1,34 +1,44 @@
 import QtQuick
 import Quickshell
-import qs.theme
+import Quickshell.Io
+import Quickshell.Hyprland
+import qs.island
 
-// Step-6 scaffold: proves the config loads, Theme recolors live, and a
-// top-center pill lands where expected on 5120x1440. Replaced by
-// island/Island.qml in step 7.
 ShellRoot {
-    PanelWindow {
-        anchors.top: true
-        margins.top: 12
-        implicitWidth: 300
-        implicitHeight: 46
-        color: "transparent"
-        // The island floats over windows; it must not reserve layout space.
-        exclusionMode: ExclusionMode.Ignore
+    Island {
+        id: island
+    }
 
-        Rectangle {
-            anchors.fill: parent
-            radius: height / 2
-            color: Theme.surface_container
-            border.width: 1
-            border.color: Theme.primary
+    // Keybind entry points; Hyprland side (binds.lua, steps 8-11):
+    //   bind = <mods>, <key>, global, quickshell:<name>
+    GlobalShortcut {
+        name: "launcher"
+        description: "Toggle the island app launcher"
+        onPressed: island.toggle("launcher")
+    }
 
-            Text {
-                anchors.centerIn: parent
-                text: "island scaffold"
-                color: Theme.on_surface
-                font.family: Theme.fontFamily
-                font.pixelSize: 18
-            }
+    GlobalShortcut {
+        name: "volume"
+        description: "Toggle the island volume panel"
+        onPressed: island.toggle("volume")
+    }
+
+    GlobalShortcut {
+        name: "wallpapers"
+        description: "Toggle the island wallpaper picker"
+        onPressed: island.toggle("wallpapers")
+    }
+
+    // Scripting/testing entry: qs -c island ipc call island toggle <name>
+    IpcHandler {
+        target: "island"
+
+        function toggle(feature: string): void {
+            island.toggle(feature);
+        }
+
+        function collapse(): void {
+            island.collapse();
         }
     }
 }

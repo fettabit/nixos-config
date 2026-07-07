@@ -50,8 +50,8 @@ Clock only. The music icon and track title are removed; the pill no longer chang
 
 | Value | Before | After |
 |---|---|---|
-| `margins.top` (screen edge → pill) | 12 | **20** |
-| Exclusive-zone bottom pad (pill → tiled windows) | +10 | **+4** |
+| `margins.top` (screen edge → pill) | 12 | **15** (jftx-tuned from initial 20) |
+| Exclusive-zone bottom pad (pill → tiled windows) | +10 | **+1** (jftx-tuned from initial 4) |
 | Peek size (media playing) | — | ≈ 640 × 104, content-driven |
 | Peek size (idle) | — | ≈ 300 × 104, content-driven |
 | Peek radius | — | `height / 2` (stadium, per reference; expanded panel keeps 24) |
@@ -69,7 +69,7 @@ Nothing new: the existing 320 ms `OutCubic` Behaviors on `islandRect` width/heig
 3. Move cursor away → grim → pill restored, clock-only.
 4. Expansion-beats-peek: IPC-toggle a feature while hovering — expanded panel shows, no fight.
 5. Recolor during peek (`ALT+W` or wallpaper-random) — colors update live.
-6. Geometry: windows tile 4 px below the pill, 20 px top margin. `nix flake check`.
+6. Geometry: windows tile 1 px below the pill strip, 15 px top margin (jftx-tuned, live since 2026-07-06).
 7. jftx feel-test: morph smoothness, debounce timing, sizes.
 
 ## Plan-doc amendment

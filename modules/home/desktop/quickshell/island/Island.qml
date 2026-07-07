@@ -25,7 +25,7 @@ PanelWindow {
     }
 
     anchors.top: true
-    margins.top: 20
+    margins.top: 15
     // Strip must fit the largest expansion (launcher, step 8).
     implicitWidth: 1200
     implicitHeight: 640
@@ -33,7 +33,7 @@ PanelWindow {
     // Reserve only the collapsed pill strip so windows tile below it;
     // expansions overlay the window area instead of reflowing it.
     exclusionMode: ExclusionMode.Normal
-    exclusiveZone: margins.top + islandRect.pillHeight + 4
+    exclusiveZone: margins.top + islandRect.pillHeight + 1
     WlrLayershell.namespace: "quickshell-island"
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: expanded ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None

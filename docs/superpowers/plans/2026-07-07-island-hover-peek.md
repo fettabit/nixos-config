@@ -85,7 +85,7 @@ Row {
         Text {
             visible: root.artUrl === ""
             anchors.centerIn: parent
-            text: "" // nf-fa-music
+            text: "\uf001" // nf-fa-music
             color: Theme.primary
             font.family: Theme.iconFontFamily
             font.pixelSize: 22

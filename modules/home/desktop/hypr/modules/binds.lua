@@ -47,9 +47,16 @@ end
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("systemctl --user start wallpaper.service"))
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("wallpaper-picker"))
 
--- Example special workspace (scratchpad)
-hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("magic"))
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
+---------------------
+---- SCREENSHOT ----
+---------------------
+-- drag-select a region; ESC cancels (slurp fails -> exit, no file written)
+hl.bind(
+	mainMod .. " + S",
+	hl.dsp.exec_cmd(
+		[[sh -c 'g=$(slurp) || exit; d=$HOME/Pictures/Screenshots; mkdir -p "$d"; f=$d/$(date +%F_%H-%M-%S).png; grim -g "$g" - | tee "$f" | wl-copy; notify-send -i "$f" "Screenshot saved" "$f"']]
+	)
+)
 
 -- Scroll through existing workspaces with mainMod + scroll
 hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))

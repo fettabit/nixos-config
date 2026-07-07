@@ -24,6 +24,11 @@ PanelWindow {
         expandedFeature = "";
     }
 
+    // Hover peek: display-only third state (no focus grab, no keyboard).
+    // Debounced so grazing the screen edge doesn't flicker the island.
+    property bool peeked: false
+    readonly property bool showPeek: peeked && !expanded
+
     anchors.top: true
     margins.top: 15
     // Strip must fit the largest expansion (launcher, step 8).
@@ -49,6 +54,20 @@ PanelWindow {
         onCleared: root.collapse()
     }
 
+    Timer {
+        id: peekIn
+
+        interval: 150
+        onTriggered: root.peeked = true
+    }
+
+    Timer {
+        id: peekOut
+
+        interval: 250
+        onTriggered: root.peeked = false
+    }
+
     Rectangle {
         id: islandRect
 
@@ -57,13 +76,31 @@ PanelWindow {
 
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-        width: root.expanded ? expandedContent.implicitWidth : pill.implicitWidth + 2 * pillHPad
-        height: root.expanded ? expandedContent.implicitHeight : pillHeight
+        width: root.expanded ? expandedContent.implicitWidth
+             : root.showPeek ? peekView.implicitWidth
+             : pill.implicitWidth + 2 * pillHPad
+        height: root.expanded ? expandedContent.implicitHeight
+              : root.showPeek ? peekView.implicitHeight
+              : pillHeight
         radius: root.expanded ? 24 : height / 2
         clip: true
         color: Theme.surface_container
         border.width: 1
         border.color: Theme.primary
+
+        HoverHandler {
+            id: hover
+
+            onHoveredChanged: {
+                if (hovered) {
+                    peekOut.stop();
+                    peekIn.restart();
+                } else {
+                    peekIn.stop();
+                    peekOut.restart();
+                }
+            }
+        }
 
         Behavior on width {
             NumberAnimation {
@@ -91,7 +128,21 @@ PanelWindow {
 
             anchors.horizontalCenter: parent.horizontalCenter
             height: islandRect.pillHeight
-            opacity: root.expanded ? 0 : 1
+            opacity: root.expanded || root.showPeek ? 0 : 1
+            visible: opacity > 0
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 150
+                }
+            }
+        }
+
+        PeekView {
+            id: peekView
+
+            anchors.centerIn: parent
+            opacity: root.showPeek ? 1 : 0
             visible: opacity > 0
 
             Behavior on opacity {

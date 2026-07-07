@@ -51,7 +51,12 @@ PanelWindow {
     HyprlandFocusGrab {
         windows: [root]
         active: root.expanded
-        onCleared: root.collapse()
+        onCleared: {
+            peekIn.stop();
+            peekOut.stop();
+            root.peeked = false;
+            root.collapse();
+        }
     }
 
     Timer {
@@ -127,6 +132,7 @@ PanelWindow {
             id: pill
 
             anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
             height: islandRect.pillHeight
             opacity: root.expanded || root.showPeek ? 0 : 1
             visible: opacity > 0

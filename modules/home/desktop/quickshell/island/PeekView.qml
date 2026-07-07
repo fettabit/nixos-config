@@ -27,19 +27,21 @@ Row {
         color: Theme.surface_container_high
 
         Image {
+            id: art
+
             anchors.fill: parent
-            visible: root.artUrl !== ""
+            visible: root.artUrl !== "" && art.status !== Image.Error
             source: root.artUrl
             fillMode: Image.PreserveAspectCrop
             sourceSize: Qt.size(112, 112)
             asynchronous: true
         }
 
-        // No art URL from the player: music-note glyph instead.
+        // No art URL from the player (or a broken one): music-note glyph instead.
         Text {
-            visible: root.artUrl === ""
+            visible: root.artUrl === "" || art.status === Image.Error
             anchors.centerIn: parent
-            text: "" // nf-fa-music
+            text: "\uf001" // nf-fa-music
             color: Theme.primary
             font.family: Theme.iconFontFamily
             font.pixelSize: 22

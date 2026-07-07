@@ -30,8 +30,10 @@ PanelWindow {
     implicitWidth: 1200
     implicitHeight: 640
     color: "transparent"
-    // The island floats over windows; it must not reserve layout space.
-    exclusionMode: ExclusionMode.Ignore
+    // Reserve only the collapsed pill strip so windows tile below it;
+    // expansions overlay the window area instead of reflowing it.
+    exclusionMode: ExclusionMode.Normal
+    exclusiveZone: margins.top + islandRect.pillHeight + 10
     WlrLayershell.namespace: "quickshell-island"
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: expanded ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None

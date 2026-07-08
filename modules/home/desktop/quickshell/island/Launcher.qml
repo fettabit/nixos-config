@@ -43,13 +43,40 @@ Item {
             ? 2 * listMargin + shownRows * rowHeight + (shownRows - 1) * listSpacing
             : 0)
 
-    // Recompute matches for the current query. Task 3 upgrades the
-    // clear+rebuild into the smart diff that feeds list transitions.
+    // Smart diff (ported from the reference launcher): mutate appModel
+    // into the new match order with remove/move/insert instead of a
+    // clear+rebuild, so the ListView's add/remove/displaced transitions
+    // animate filter changes instead of the list snapping.
     function refilter() {
+        root.keyboardNav = false;
+        keyboardNavReset.stop();
         const matches = rankedMatches(searchField.text);
-        appModel.clear();
-        for (const m of matches)
-            appModel.append({ name: m.name, entry: m });
+
+        for (let i = appModel.count - 1; i >= 0; i--) {
+            const kept = matches.some(m => m.name === appModel.get(i).name);
+            if (!kept)
+                appModel.remove(i);
+        }
+        for (let i = 0; i < matches.length; i++) {
+            const target = matches[i];
+            if (i < appModel.count) {
+                if (appModel.get(i).name !== target.name) {
+                    let found = -1;
+                    for (let j = i + 1; j < appModel.count; j++) {
+                        if (appModel.get(j).name === target.name) {
+                            found = j;
+                            break;
+                        }
+                    }
+                    if (found !== -1)
+                        appModel.move(found, i, 1);
+                    else
+                        appModel.insert(i, { name: target.name, entry: target });
+                }
+            } else {
+                appModel.append({ name: target.name, entry: target });
+            }
+        }
         appList.currentIndex = appModel.count > 0 ? 0 : -1;
     }
 
@@ -90,6 +117,17 @@ Item {
         onTriggered: searchField.forceActiveFocus()
     }
 
+    // The morphing highlight only "lags" during keyboard nav; during
+    // filter diffs it must stick to the moving current row instantly.
+    property bool keyboardNav: false
+
+    Timer {
+        id: keyboardNavReset
+
+        interval: 500
+        onTriggered: root.keyboardNav = false
+    }
+
     ListModel {
         id: appModel
     }
@@ -115,11 +153,108 @@ Item {
                 positionViewAtIndex(currentIndex, ListView.Contain);
         }
 
-        // Task 3 replaces this stock bar with the morphing highlight.
-        highlightMoveDuration: 0
-        highlight: Rectangle {
-            radius: 8
-            color: Theme.primary
+        highlightFollowsCurrentItem: false
+
+        // The reference's stretchy two-edge highlight: the leading edge
+        // arrives in 250 ms, the trailing edge catches up in 450 ms.
+        highlight: Item {
+            z: 0
+
+            Rectangle {
+                id: activeHighlight
+
+                property int prevIdx: 0
+                property int curIdx: appList.currentIndex
+                property real targetTop: appList.currentItem ? appList.currentItem.y : 0
+                property real targetBottom: appList.currentItem ? appList.currentItem.y + appList.currentItem.height : 0
+                property real actualTop: targetTop
+                property real actualBottom: targetBottom
+
+                onCurIdxChanged: {
+                    if (curIdx === -1)
+                        return;
+                    // BottomToTop: higher index = smaller y, so index-up
+                    // leads with the TOP edge.
+                    if (curIdx > prevIdx) {
+                        topAnim.duration = 250;
+                        bottomAnim.duration = 450;
+                    } else if (curIdx < prevIdx) {
+                        bottomAnim.duration = 250;
+                        topAnim.duration = 450;
+                    }
+                    prevIdx = curIdx;
+                }
+
+                x: 0
+                width: appList.width
+                y: actualTop
+                height: actualBottom - actualTop
+                radius: 8
+                color: Theme.primary
+                scale: appList.currentItem ? appList.currentItem.scale : 1
+                opacity: appList.count > 0 && appList.currentIndex >= 0 ? 1 : 0
+
+                Behavior on actualTop {
+                    enabled: root.keyboardNav
+                    NumberAnimation {
+                        id: topAnim
+
+                        easing.type: Easing.OutExpo
+                    }
+                }
+
+                Behavior on actualBottom {
+                    enabled: root.keyboardNav
+                    NumberAnimation {
+                        id: bottomAnim
+
+                        easing.type: Easing.OutExpo
+                    }
+                }
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 300
+                    }
+                }
+            }
+        }
+
+        populate: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 550; easing.type: Easing.OutExpo }
+                NumberAnimation { property: "scale"; from: 0.88; to: 1; duration: 600; easing.type: Easing.OutExpo }
+            }
+        }
+
+        add: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 380; easing.type: Easing.OutExpo }
+                NumberAnimation { property: "scale"; from: 0.88; to: 1; duration: 420; easing.type: Easing.OutExpo }
+            }
+        }
+
+        remove: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; to: 0; duration: 280; easing.type: Easing.OutExpo }
+                NumberAnimation { property: "scale"; to: 0.88; duration: 300; easing.type: Easing.OutExpo }
+            }
+        }
+
+        displaced: Transition {
+            NumberAnimation { properties: "x,y"; duration: 380; easing.type: Easing.OutExpo }
+        }
+
+        ScrollBar.vertical: ScrollBar {
+            active: true
+            policy: ScrollBar.AsNeeded
+
+            contentItem: Rectangle {
+                implicitWidth: 4
+                radius: 2
+                color: Theme.surface_container_highest
+                opacity: 0.5
+            }
         }
 
         delegate: Item {
@@ -131,6 +266,24 @@ Item {
 
             width: ListView.view.width
             height: root.rowHeight
+            z: 1
+            transformOrigin: Item.Center
+
+            // Soft hover wash; the selection is keyboard-owned and never
+            // follows the mouse.
+            Rectangle {
+                anchors.fill: parent
+                radius: 8
+                color: Theme.surface_container_high
+                opacity: rowMouse.containsMouse && row.index !== appList.currentIndex ? 0.4 : 0
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 250
+                        easing.type: Easing.OutSine
+                    }
+                }
+            }
 
             RowLayout {
                 anchors.fill: parent
@@ -138,14 +291,30 @@ Item {
                 anchors.rightMargin: 12
                 spacing: 15
 
-                // Icon tile; Task 3 adds tint/scale-pop. First-letter
+                // Tinted icon tile with selection pop. First-letter
                 // fallback mirrors PeekView's glyph-fallback pattern.
                 Rectangle {
                     Layout.preferredWidth: 40
                     Layout.preferredHeight: 40
                     radius: 12
-                    color: Theme.surface_container_high
+                    color: row.index === appList.currentIndex ? Theme.surface_container_lowest : Theme.surface_container_high
                     clip: true
+                    scale: row.index === appList.currentIndex ? 1.15 : 1
+
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: 500
+                            easing.type: Easing.OutBack
+                            easing.overshoot: 1.5
+                        }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 300
+                            easing.type: Easing.OutExpo
+                        }
+                    }
 
                     Image {
                         id: iconImg
@@ -169,9 +338,26 @@ Item {
                         font.pixelSize: 18
                         font.weight: Font.DemiBold
                     }
+
+                    // Matugen tint wash over the icon.
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 12
+                        color: Theme.primary
+                        opacity: row.index === appList.currentIndex ? 0.25 : 0.08
+
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: 300
+                                easing.type: Easing.OutExpo
+                            }
+                        }
+                    }
                 }
 
                 Text {
+                    id: nameText
+
                     Layout.fillWidth: true
                     text: row.name
                     color: row.index === appList.currentIndex ? Theme.on_primary : Theme.on_surface
@@ -180,6 +366,26 @@ Item {
                     font.weight: row.index === appList.currentIndex ? Font.Bold : Font.Medium
                     elide: Text.ElideRight
                     verticalAlignment: Text.AlignVCenter
+
+                    property real textShift: row.index === appList.currentIndex ? 6 : 0
+
+                    transform: Translate {
+                        x: nameText.textShift
+                    }
+
+                    Behavior on textShift {
+                        NumberAnimation {
+                            duration: 500
+                            easing.type: Easing.OutExpo
+                        }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 300
+                            easing.type: Easing.OutExpo
+                        }
+                    }
                 }
             }
 
@@ -249,11 +455,15 @@ Item {
                 // BottomToTop: Up walks away from the search bar
                 // (index+1), Down back toward the best match (index-1).
                 Keys.onUpPressed: event => {
+                    root.keyboardNav = true;
+                    keyboardNavReset.restart();
                     if (appList.currentIndex < appModel.count - 1)
                         appList.currentIndex++;
                     event.accepted = true;
                 }
                 Keys.onDownPressed: event => {
+                    root.keyboardNav = true;
+                    keyboardNavReset.restart();
                     if (appList.currentIndex > 0)
                         appList.currentIndex--;
                     event.accepted = true;

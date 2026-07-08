@@ -40,5 +40,9 @@ ShellRoot {
         function collapse(): void {
             island.collapse();
         }
+
+        function search(text: string): void {
+            island.search(text);
+        }
     }
 }

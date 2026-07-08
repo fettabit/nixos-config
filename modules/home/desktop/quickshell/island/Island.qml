@@ -24,6 +24,14 @@ PanelWindow {
         expandedFeature = "";
     }
 
+    // Scripted-verification path: open the launcher (if needed) and set
+    // its query, so filtered states can be screenshotted without a real
+    // keyboard. Reached via `qs -c island ipc call island search <text>`.
+    function search(text: string): void {
+        expandedFeature = "launcher";
+        expandedContent.item.setQuery(text);
+    }
+
     // Hover peek: display-only third state (no focus grab, no keyboard).
     // Debounced so grazing the screen edge doesn't flicker the island.
     property bool peeked: false
@@ -162,32 +170,54 @@ PanelWindow {
             }
         }
 
-        // Placeholder expansion panel; steps 8-11 replace this with a
-        // Loader keyed on expandedFeature.
-        Item {
+        // Feature expansions load on demand; the morph engine only sees
+        // the Loader's implicit size. Steps 9-11 add their features to
+        // the sourceComponent switch; unknown names keep the placeholder.
+        // Content unloads instantly on collapse — the 320 ms shrink morph
+        // covers it (revisit only if it reads harsh live).
+        Loader {
             id: expandedContent
 
             anchors.fill: parent
-            implicitWidth: 560
-            implicitHeight: 300
+            active: root.expanded
+            focus: true
+            sourceComponent: root.expandedFeature === "launcher" ? launcherPanel
+                : root.expanded ? placeholderPanel : null
             opacity: root.expanded ? 1 : 0
             visible: opacity > 0
-            focus: root.expanded
-
-            Keys.onEscapePressed: root.collapse()
 
             Behavior on opacity {
                 NumberAnimation {
                     duration: 200
                 }
             }
+        }
 
-            Text {
-                anchors.centerIn: parent
-                text: root.expandedFeature
-                color: Theme.on_surface
-                font.family: Theme.fontFamily
-                font.pixelSize: 24
+        Component {
+            id: launcherPanel
+
+            Launcher {
+                onDismissRequested: root.collapse()
+            }
+        }
+
+        Component {
+            id: placeholderPanel
+
+            Item {
+                implicitWidth: 560
+                implicitHeight: 300
+                focus: true
+
+                Keys.onEscapePressed: root.collapse()
+
+                Text {
+                    anchors.centerIn: parent
+                    text: root.expandedFeature
+                    color: Theme.on_surface
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 24
+                }
             }
         }
     }

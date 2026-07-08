@@ -7,10 +7,6 @@
       editor = "vscode";
       prompt = "enabled";
       pager = "less";
-      aliases = {
-        ic = "issue create";
-        il = "issue list";
-      };
     };
   };
 }

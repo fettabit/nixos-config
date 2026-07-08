@@ -8,6 +8,14 @@
     curl
     btop
     kitty
+    lutris
+    wine-wayland
+    winetricks
+    wineWow64Packages.staging
+    vulkan-tools
+    vulkan-loader
+    mangohud
+    gamescope
     python3
     nautilus
     waybar

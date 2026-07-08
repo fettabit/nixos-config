@@ -54,13 +54,13 @@ Clock only. The music icon and track title are removed; the pill no longer chang
 | Exclusive-zone bottom pad (pill → tiled windows) | +10 | **+1** (jftx-tuned from initial 4) |
 | Peek size (media playing) | — | ≈ 640 × 104, content-driven |
 | Peek size (idle) | — | ≈ 300 × 104, content-driven |
-| Peek radius | — | `height / 2` (stadium, per reference; expanded panel keeps 24) |
+| Island radius (all states) | pill `height / 2`, expanded 24 | **18 fixed** (jftx-tuned 2026-07-08 from stadium to match reference notch screenshot) |
 
 All sizes audited on-screen at 5120×1440; single-number tunes expected.
 
 ## Animation
 
-Nothing new: the existing 320 ms `OutCubic` Behaviors on `islandRect` width/height/radius carry the pill↔peek morph. Pill, peek, and expanded contents cross-fade on opacity exactly as pill/placeholder do today.
+Nothing new: the existing 320 ms `OutCubic` Behaviors on `islandRect` width/height carry the pill↔peek morph (radius is a constant 18 since the 2026-07-08 tune, so its Behavior was removed). Pill, peek, and expanded contents cross-fade on opacity exactly as pill/placeholder do today.
 
 ## Verification (Claude self-drives)
 

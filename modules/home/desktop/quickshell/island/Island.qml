@@ -87,7 +87,9 @@ PanelWindow {
         height: root.expanded ? expandedContent.implicitHeight
               : root.showPeek ? peekView.implicitHeight
               : pillHeight
-        radius: root.expanded ? 24 : height / 2
+        // Fixed across all three states (feel-tuned): corners read as one
+        // continuous surface while width/height morph.
+        radius: 18
         clip: true
         color: Theme.surface_container
         border.width: 1
@@ -115,13 +117,6 @@ PanelWindow {
         }
 
         Behavior on height {
-            NumberAnimation {
-                duration: 320
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        Behavior on radius {
             NumberAnimation {
                 duration: 320
                 easing.type: Easing.OutCubic

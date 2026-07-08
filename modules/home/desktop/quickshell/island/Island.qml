@@ -87,9 +87,11 @@ PanelWindow {
         height: root.expanded ? expandedContent.implicitHeight
               : root.showPeek ? peekView.implicitHeight
               : pillHeight
-        // Fixed across all three states (feel-tuned): corners read as one
-        // continuous surface while width/height morph.
-        radius: 18
+        // Collapsed pill stays a capsule; grown states (peek/expanded)
+        // square off to 18 (feel-tuned to jftx's reference notch).
+        // pillHeight/2, not height/2: a constant morph target keeps the
+        // Behavior from re-targeting every frame while height animates.
+        radius: root.expanded || root.showPeek ? 18 : pillHeight / 2
         clip: true
         color: Theme.surface_container
         border.width: 1
@@ -117,6 +119,13 @@ PanelWindow {
         }
 
         Behavior on height {
+            NumberAnimation {
+                duration: 320
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on radius {
             NumberAnimation {
                 duration: 320
                 easing.type: Easing.OutCubic

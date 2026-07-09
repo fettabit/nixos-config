@@ -157,6 +157,7 @@ CLAUDE.md                                        # step 12: unstable channel, is
 
 **Track C — later sessions (planned, not now)**
 - **Panels** (one PR each): network + bluetooth panel — now via native `Quickshell.Networking`/`Quickshell.Bluetooth` (no nmcli/bluetoothctl parsing); a compact network indicator also fills the island peek's reserved right slot (see step 7 addendum); calendar (+weather); music popup + cava; monitors; settings; guide.
+- **Control center** (added 2026-07-08 per jftx): one island expansion aggregating quick-toggle tiles (Wi-Fi, Bluetooth, DND, night light), volume + brightness sliders, output-device row, media card with controls, and notification history — Android-quick-settings style (reference screenshot from jftx, 2026-07-08 session). Composes the other Track C panels' backends instead of duplicating them; absorbs the standalone notification-history idea. Step 9 builds its volume slider + output-device row as reusable components so this panel can mount them unchanged.
 - **Session**: lockscreen via `Quickshell.Services.Pam` + hypridle (decide value on an autologin machine); screenshot overlay (grim/slurp + satty). 0.3.0's Polkit-agent support could replace hyprpolkitagent — evaluate here.
 - **Extras**: clipboard manager (+cliphist), quickactions, focustime.
 - **Deferred/excluded**: spicetify-matugen (fights Nix-managed spicetify), stewart, movies, updater.

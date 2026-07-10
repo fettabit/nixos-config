@@ -86,5 +86,15 @@ ShellRoot {
             Audio.toggleMute();
             island.flash();
         }
+
+        // Scripted device-switch verification: ids from `wpctl status`.
+        function setSink(id: int): void {
+            for (const node of Audio.sinks) {
+                if (node.id === id) {
+                    Audio.setSink(node);
+                    return;
+                }
+            }
+        }
     }
 }

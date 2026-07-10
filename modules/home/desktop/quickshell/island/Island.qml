@@ -238,6 +238,7 @@ PanelWindow {
             active: root.expanded
             focus: true
             sourceComponent: root.expandedFeature === "launcher" ? launcherPanel
+                : root.expandedFeature === "volume" ? volumePanel
                 : root.expanded ? placeholderPanel : null
             opacity: root.expanded ? 1 : 0
             visible: opacity > 0
@@ -253,6 +254,14 @@ PanelWindow {
             id: launcherPanel
 
             Launcher {
+                onDismissRequested: root.collapse()
+            }
+        }
+
+        Component {
+            id: volumePanel
+
+            VolumePanel {
                 onDismissRequested: root.collapse()
             }
         }

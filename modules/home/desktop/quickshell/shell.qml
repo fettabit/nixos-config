@@ -44,5 +44,17 @@ ShellRoot {
         function search(text: string): void {
             island.search(text);
         }
+
+        function volumeUp(): void {
+            Audio.step(1);
+        }
+
+        function volumeDown(): void {
+            Audio.step(-1);
+        }
+
+        function volumeMute(): void {
+            Audio.toggleMute();
+        }
     }
 }

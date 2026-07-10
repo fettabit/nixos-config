@@ -29,6 +29,33 @@ ShellRoot {
         onPressed: island.toggle("wallpapers")
     }
 
+    GlobalShortcut {
+        name: "volumeUp"
+        description: "Raise volume 5% (island flash)"
+        onPressed: {
+            Audio.step(1);
+            island.flash();
+        }
+    }
+
+    GlobalShortcut {
+        name: "volumeDown"
+        description: "Lower volume 5% (island flash)"
+        onPressed: {
+            Audio.step(-1);
+            island.flash();
+        }
+    }
+
+    GlobalShortcut {
+        name: "volumeMute"
+        description: "Toggle mute (island flash)"
+        onPressed: {
+            Audio.toggleMute();
+            island.flash();
+        }
+    }
+
     // Scripting/testing entry: qs -c island ipc call island toggle <name>
     IpcHandler {
         target: "island"
@@ -47,14 +74,17 @@ ShellRoot {
 
         function volumeUp(): void {
             Audio.step(1);
+            island.flash();
         }
 
         function volumeDown(): void {
             Audio.step(-1);
+            island.flash();
         }
 
         function volumeMute(): void {
             Audio.toggleMute();
+            island.flash();
         }
     }
 }

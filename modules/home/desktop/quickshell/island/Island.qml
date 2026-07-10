@@ -32,10 +32,30 @@ PanelWindow {
         expandedContent.item.setQuery(text);
     }
 
+    // Flash: display-only volume OSD, the 4th morph state (priority:
+    // expanded > flashing > peeked > pill). Restartable so key repeats
+    // hold it open; suppressed while expanded — the panel already shows
+    // the change live.
+    property bool flashing: false
+
+    function flash(): void {
+        if (expanded)
+            return;
+        flashing = true;
+        flashOut.restart();
+    }
+
+    onExpandedChanged: {
+        if (expanded) {
+            flashOut.stop();
+            flashing = false;
+        }
+    }
+
     // Hover peek: display-only third state (no focus grab, no keyboard).
     // Debounced so grazing the screen edge doesn't flicker the island.
     property bool peeked: false
-    readonly property bool showPeek: peeked && !expanded
+    readonly property bool showPeek: peeked && !expanded && !flashing
 
     anchors.top: true
     margins.top: 15
@@ -51,8 +71,10 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: expanded ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
+    // While flashing, the input region stays pill-sized: clicks in the
+    // flash's extra width pass through to windows below (spec).
     mask: Region {
-        item: islandRect
+        item: root.flashing ? pill : islandRect
     }
 
     // Click anywhere outside the island: collapse.
@@ -81,6 +103,13 @@ PanelWindow {
         onTriggered: root.peeked = false
     }
 
+    Timer {
+        id: flashOut
+
+        interval: 1000
+        onTriggered: root.flashing = false
+    }
+
     Rectangle {
         id: islandRect
 
@@ -90,9 +119,11 @@ PanelWindow {
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
         width: root.expanded ? expandedContent.implicitWidth
+             : root.flashing ? flashView.implicitWidth
              : root.showPeek ? peekView.implicitWidth
              : pill.implicitWidth + 2 * pillHPad
         height: root.expanded ? expandedContent.implicitHeight
+              : root.flashing ? flashView.implicitHeight
               : root.showPeek ? peekView.implicitHeight
               : pillHeight
         // Collapsed pill stays a capsule; grown states (peek/expanded)
@@ -116,6 +147,17 @@ PanelWindow {
                     peekIn.stop();
                     peekOut.restart();
                 }
+            }
+        }
+
+        WheelHandler {
+            // target: null — a WheelHandler's default target is its
+            // parent, which it would try to transform.
+            target: null
+            enabled: !root.expanded
+            onWheel: event => {
+                Audio.step(event.angleDelta.y > 0 ? 1 : -1);
+                root.flash();
             }
         }
 
@@ -146,7 +188,7 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             height: islandRect.pillHeight
-            opacity: root.expanded || root.showPeek ? 0 : 1
+            opacity: root.expanded || root.showPeek || root.flashing ? 0 : 1
             visible: opacity > 0
 
             Behavior on opacity {
@@ -161,6 +203,20 @@ PanelWindow {
 
             anchors.centerIn: parent
             opacity: root.showPeek ? 1 : 0
+            visible: opacity > 0
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 150
+                }
+            }
+        }
+
+        VolumeFlash {
+            id: flashView
+
+            anchors.centerIn: parent
+            opacity: root.flashing ? 1 : 0
             visible: opacity > 0
 
             Behavior on opacity {

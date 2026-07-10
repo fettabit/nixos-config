@@ -15,8 +15,4 @@
     # launched manually: `qs -c island`.
     systemd.enable = false;
   };
-
-  # Volume/caps-lock OSD. Matugen writes ~/.config/swayosd/style.css,
-  # which is swayosd-server's default stylesheet lookup path.
-  services.swayosd.enable = true;
 }

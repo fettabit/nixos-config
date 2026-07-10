@@ -34,6 +34,14 @@ Revision 2026-07-05 (Track B gap interview):
 | Idle pill | Clock always; pill widens with now-playing track title (native Mpris service) when media plays. |
 | Service lifecycle | Quickshell + swayosd run as **systemd user services** via Home Manager modules (`programs.quickshell.systemd`, `services.swayosd`) on `graphical-session.target` (activated by UWSM) — not `autostart.lua` execs. `Restart=on-failure` replaces the reference's zombie-watchdog script. |
 
+Revision 2026-07-09 (step 9 volume brainstorm — spec `docs/superpowers/specs/2026-07-09-island-volume-design.md`):
+
+| Topic | Decision |
+|---|---|
+| swayosd | **Dropped entirely** (supersedes the 2026-07-04 "yes" and the swayosd halves of the rows above). The island itself is the OSD: volume keys/wheel trigger a display-only **flash** morph state (4th state, restartable 1000 ms). `services.swayosd`, the matugen swayosd template, and the swayosd-client audio path are all removed at step 9. Capslock OSD goes without replacement (revisit in Track C only if missed). |
+| Volume keys | jftx's keyboard emits **plain F10/F11/F12 keysyms — the XF86Audio binds have never fired on this board**. F10=mute, F11=down, F12=up → `global quickshell:volume{Mute,Down,Up}`; XF86Audio trio kept as aliases; XF86AudioMicMute stays on wpctl. |
+| Audio writes | New `island/Audio.qml` singleton is the shell's only PipeWire writer; no swayosd-client and no wpctl in the volume hot path. |
+
 ## Hardware/context facts
 
 Verified 2026-07-05:
@@ -53,7 +61,7 @@ Verified 2026-07-05:
 
 Session path: getty autologin on TTY1 → `bash.nix profileExtra` → `uwsm start hyprland-uwsm.desktop` → Hyprland reads hand-written **Lua** at `~/.config/hypr/hyprland.lua` (materialized from `modules/home/desktop/hypr/` via `xdg.configFile."hypr"`, `recursive = true`) → `modules/autostart.lua` execs **waybar, swaync, awww-daemon** (waybar/swaync retire in Track B).
 
-**Theming pipeline (Track A, live):** templates in `modules/home/programs/matugen/` render to runtime paths — `/tmp/qs_colors.json` (for Quickshell), `~/.cache/matugen/hypr-colors.lua` (loaded by `decorations.lua` via `pcall` with static fallback), `/tmp/kitty-matugen-colors.conf` (kitty include), `~/.cache/matugen/colors-gtk.css` (GTK `@import` via `theme.nix`), qt5ct/qt6ct scheme+qss, `~/.config/swayosd/style.css`, vesktop theme, cava colors. Trigger: `wallpaper-random.sh`/`wallpaper-picker.sh` run `matugen image "$pick" --mode dark --prefer saturation` then `matugen-reload` (kitty SIGUSR1, swayosd try-restart, GTK gsettings bounce, `hyprctl reload` with instance-signature discovery). Timer: 5 s after login, then every 10 min; `ALT+W` restarts the service resetting the countdown; no-repeat state in `~/.local/state/wallpaper-current`.
+**Theming pipeline (Track A, live):** templates in `modules/home/programs/matugen/` render to runtime paths — `/tmp/qs_colors.json` (for Quickshell), `~/.cache/matugen/hypr-colors.lua` (loaded by `decorations.lua` via `pcall` with static fallback), `/tmp/kitty-matugen-colors.conf` (kitty include), `~/.cache/matugen/colors-gtk.css` (GTK `@import` via `theme.nix`), qt5ct/qt6ct scheme+qss, `~/.config/swayosd/style.css` (dropped at step 9), vesktop theme, cava colors. Trigger: `wallpaper-random.sh`/`wallpaper-picker.sh` run `matugen image "$pick" --mode dark --prefer saturation` then `matugen-reload` (kitty SIGUSR1, swayosd try-restart (dropped at step 9), GTK gsettings bounce, `hyprctl reload` with instance-signature discovery). Timer: 5 s after login, then every 10 min; `ALT+W` restarts the service resetting the countdown; no-repeat state in `~/.local/state/wallpaper-current`.
 
 ## 3.2 Reference architecture (recon record — NOT ported)
 
@@ -84,7 +92,7 @@ What we keep from it: the **morphing-island visual concept**, the launcher and w
 ### New files
 
 ```
-modules/home/desktop/quickshell.nix   # programs.quickshell (named config "island", systemd) + services.swayosd
+modules/home/desktop/quickshell.nix   # programs.quickshell (named config "island", systemd); swayosd dropped 2026-07-09
 modules/home/desktop/quickshell/      # the QML tree = the "island" config
   shell.qml                           # ShellRoot: Island window, NotificationServer, GlobalShortcuts, IpcHandler
   theme/Theme.qml                     # pragma Singleton: FileView(watchChanges)+JsonAdapter over /tmp/qs_colors.json;
@@ -93,15 +101,19 @@ modules/home/desktop/quickshell/      # the QML tree = the "island" config
   island/Island.qml                   # PanelWindow anchored top-center: morph engine (states + animated size),
                                       #   Loader/LazyLoader per feature, ESC/click-outside collapse
   island/Pill.qml                     # collapsed content: SystemClock clock + Mpris now-playing text
-  launcher/Launcher.qml               # DesktopEntries + fuzzy filter, entry.execute(), ESC closes
-  volume/VolumePopup.qml              # Pipewire default sink: volume slider, mute, output-device selection
+  island/Launcher.qml                 # DesktopEntries + fuzzy filter, entry.execute(), ESC closes (landed flat in island/, not launcher/)
+  island/Audio.qml                    # pragma Singleton: sole PipeWire writer (default sink volume/mute/step, sink list)
+  island/VolumeFlash.qml              # display-only OSD flash content: icon + slim track + percentage
+  island/VolumePanel.qml              # island expansion: VolumeSlider + mute + OutputDeviceList
+  island/VolumeSlider.qml             # thin-track slider, standalone — remounted by the Track C control center
+  island/OutputDeviceList.qml         # sink radio rows, standalone — remounted by the Track C control center
   notifications/NotificationView.qml  # in-island rendering of tracked notifications, auto-collapse timeout
   wallpapers/WallpaperPicker.qml      # FolderListModel over ~/wallpapers, async thumbnails, select → wallpaper-set
 modules/home/services/scripts/wallpaper-set.sh  # NEW: shared "apply wallpaper <path>" (state file + awww img +
                                                 #   matugen + matugen-reload), extracted from wallpaper-random.sh
 ```
 
-QML conventions: root-relative imports (`import qs.theme`), no `../` escapes, one directory per concern mirroring the repo's `modules/` style. No bash/python sidecars — the shell's only external calls are `wallpaper-set` (picker selection) and nothing else; volume binds call `swayosd-client` from Hyprland, not from QML.
+QML conventions: root-relative imports (`import qs.theme`), no `../` escapes, one directory per concern mirroring the repo's `modules/` style. No bash/python sidecars — the shell's only external calls are `wallpaper-set` (picker selection) and nothing else; volume keys route through `global` dispatchers into the shell, where `Audio.qml` (the sole PipeWire writer) applies them (revised 2026-07-09; was swayosd-client).
 
 ### Modified files
 
@@ -113,7 +125,8 @@ modules/home/services/wallpaper.nix              # add wallpaper-set writeShellA
 modules/home/services/scripts/wallpaper-random.sh #   becomes "pick non-repeating, then exec wallpaper-set"
 modules/home/desktop/hypr/modules/binds.lua      # ALT+SPACE → global quickshell:launcher (rofi drun bind removed);
                                                  # ALT+SHIFT+W → global quickshell:wallpapers (script kept as fallback);
-                                                 # SUPER+V → global quickshell:volume; volume keys wpctl → swayosd-client;
+                                                 # SUPER+V → global quickshell:volume; F10/F11/F12 + XF86Audio aliases
+                                                 #   → global quickshell:volume{Mute,Down,Up} (was: wpctl → swayosd-client);
                                                  # step 12: remove ALT+R waybar launch bind
 modules/home/desktop/hypr/modules/autostart.lua  # step 10: drop swaync; step 12: drop waybar (awww-daemon stays)
 modules/home/desktop/hypr/modules/windowrules.lua # layerrules for quickshell layer namespaces (audit at steps 7–9)
@@ -132,7 +145,7 @@ CLAUDE.md                                        # step 12: unstable channel, is
 
 **Keybind routing**: `GlobalShortcut` objects in `shell.qml` (appid `quickshell`; names `launcher`, `volume`, `wallpapers`) bound in `binds.lua` via Hyprland's `global` dispatcher (`global, quickshell:launcher`). If the `hl.*` Lua API has no wrapper for it, use its generic dispatcher call; `qs ipc call` remains as scripting/testing fallback (an `IpcHandler` is kept in `shell.qml` regardless). Caveats: duplicate appid:name registrations can crash — exactly one quickshell instance (enforced by systemd at step 12); if the shell is down, `global` binds are inert — `Restart=on-failure` covers it, and `ALT+RETURN` (kitty) never routes through the shell.
 
-**Audio path**: volume keys → `swayosd-client --output-volume raise/lower`, `--output-volume mute-toggle` (changes volume *and* shows the themed OSD). Quickshell's Pipewire bindings observe the change live — no IPC between swayosd and the island needed. `services.swayosd.enable = true`; matugen already writes `~/.config/swayosd/style.css`, swayosd-server's default lookup path (set `stylePath` explicitly only if step 6 verification shows it isn't picked up).
+**Audio path (revised 2026-07-09)**: volume keys — F10/F11/F12 plain keysyms (jftx's board never emits XF86Audio; the XF86 trio stays as aliases) → `global quickshell:volume{Mute,Down,Up}` → `Audio.qml` singleton, the shell's only PipeWire writer, steps ±5% (volume-up unmutes) and the island **flashes** a display-only OSD morph state (restartable 1000 ms, suppressed while expanded). swayosd is gone: `services.swayosd`, the matugen swayosd template, and matugen-reload's swayosd try-restart are all removed at step 9. Spec: `docs/superpowers/specs/2026-07-09-island-volume-design.md`.
 
 **Notification daemon conflict**: quickshell and swaync both claim `org.freedesktop.Notifications` — the swap is atomic in step 10 (same commit enables `NotificationServer` and removes swaync from `autostart.lua`); rollback = revert one commit.
 
@@ -150,10 +163,10 @@ CLAUDE.md                                        # step 12: unstable channel, is
 7. **Island pill + morph engine.** `Island.qml` (PanelWindow, top-center), `Pill.qml` (SystemClock + Mpris now-playing), morph states + animated width/height with a placeholder expanded panel, `GlobalShortcut`s + `IpcHandler`, ESC/click-outside collapse. Size audit on 5120×1440. Verify (manual run): live clock; track title appears when Spotify plays; `qs ipc call` toggles the placeholder expansion smoothly; recolors live.
    **Addendum 2026-07-06 (approved):** the pill becomes clock-only; now-playing moves to a hover-triggered **peek** — a third, display-only morph state (no focus grab) showing album art + title/artist, large clock + date, with the right slot reserved for Track C network status. Spec: `docs/superpowers/specs/2026-07-06-island-hover-peek-design.md`. Also: `margins.top` 12→15, exclusive-zone bottom pad 10→1 (values feel-tuned by jftx). Implementation plan: `docs/superpowers/plans/2026-07-07-island-hover-peek.md`.
 8. **Launcher.** `Launcher.qml` (DesktopEntries + fuzzy filter) as an island expansion; `binds.lua`: `ALT+SPACE` → `global, quickshell:launcher`, rofi drun bind removed (same commit). Verify: ALT+SPACE expands island, fuzzy-finds, launches, ESC collapses. **✅ done 2026-07-08** (spec + plan in docs/superpowers/; inverted-fzf layout with breathing height per jftx's design — search bar at the panel's bottom edge, results stack upward, tiered fuzzy ranking in fuzzy.js; Lua side uses `hl.dsp.global("quickshell:launcher")`).
-9. **Volume.** `VolumePopup.qml` (Pipewire sink volume/mute/device select) as an island expansion on `SUPER+V`; volume keys switch `wpctl` → `swayosd-client`. Verify: keys show themed OSD; popup slider and device switch work live; island recolors on wallpaper change mid-popup.
+9. **Volume.** Spec: `docs/superpowers/specs/2026-07-09-island-volume-design.md` (revised 2026-07-09; replaces the swayosd plan). `Audio.qml` singleton (sole PipeWire writer) + island **flash** OSD (4th display-only morph state; `showPeek` gains `&& !flashing`) + `VolumePanel.qml` (slim slider / mute / output-device radio rows — slider + device list standalone for the Track C control center) on `SUPER+V`; `binds.lua`: F10/F11/F12 + XF86Audio aliases → `global quickshell:volume{Mute,Down,Up}`, wheel on pill/peek ±5%+flash; **same step removes `services.swayosd` + the matugen swayosd template**. Verify: keys flash the island and move `wpctl get-volume`; hold-to-ramp (impl-verify: `repeating` × `global`, fallback onPressed/onReleased ramp); panel slider + device switch live (impl-verify: `Pipewire.preferredDefaultAudioSink`, fallback `wpctl set-default`); no flash while expanded; island recolors on wallpaper change mid-panel.
 10. **Notifications.** `NotificationServer` in `shell.qml` + `NotificationView.qml` island morph with auto-collapse; **same commit** removes swaync from `autostart.lua`. Verify: **rb (ask jftx)** + `pkill swaync`; `notify-send test` morphs the island; `journalctl --user` shows no daemon conflict.
 11. **Wallpaper picker.** `wallpaper-set` extraction in `wallpaper.nix` + scripts; `WallpaperPicker.qml` thumbnail grid as island expansion; `ALT+SHIFT+W` → `global, quickshell:wallpapers` (rofi picker script kept, bind replaced). Verify: grid opens, selection sets wallpaper + full retheme cascade (island included), 10-min timer no-repeat logic intact.
-12. **Systemd flip + solidify.** `programs.quickshell.systemd.enable = true`; `autostart.lua` drops waybar (`ALT+R` launch bind removed; waybar/swaync files + packages stay in repo); quickshell config source switched to the pure store path; CLAUDE.md updated (unstable channel, island shell, theming pipeline, this plan). Verify: **rb + full reboot (ask jftx)** → clean session: island up via systemd (`systemctl --user status quickshell swayosd`), 10-min retheme cascade works, ALT binds intact, `nix flake check` clean. PR + merge.
+12. **Systemd flip + solidify.** `programs.quickshell.systemd.enable = true`; `autostart.lua` drops waybar (`ALT+R` launch bind removed; waybar/swaync files + packages stay in repo); quickshell config source switched to the pure store path; CLAUDE.md updated (unstable channel, island shell, theming pipeline, this plan). Verify: **rb + full reboot (ask jftx)** → clean session: island up via systemd (`systemctl --user status quickshell`), 10-min retheme cascade works, ALT binds intact, `nix flake check` clean. PR + merge.
 
 **Track C — later sessions (planned, not now)**
 - **Panels** (one PR each): network + bluetooth panel — now via native `Quickshell.Networking`/`Quickshell.Bluetooth` (no nmcli/bluetoothctl parsing); a compact network indicator also fills the island peek's reserved right slot (see step 7 addendum); calendar (+weather); music popup + cava; monitors; settings; guide.
@@ -171,7 +184,7 @@ CLAUDE.md                                        # step 12: unstable channel, is
 | **Notification daemon conflict** (swaync vs quickshell) | Atomic swap in step 10 (same commit removes swaync autostart); rollback = revert one commit. |
 | **GlobalShortcut caveats** | Duplicate appid:name can crash — single instance enforced by systemd (step 12); binds inert if shell down — `Restart=on-failure` + `ALT+RETURN` kitty bind never routes through the shell; NixOS generation rollback as last resort. |
 | **Runtime outputs vs declarative HM** | Unchanged from Track A: outputs only in `/tmp`, `~/.cache`, writable config dirs; all consumers have no-output fallbacks; timer self-heals 5 s after login. |
-| **10-min retheme side effects** (GTK toggle flash, swayosd restart pop) | Accept initially; tune later (drop swayosd restart from the timer path, keep for manual picks). |
+| **10-min retheme side effects** (GTK toggle flash) | Accept initially; tune later. (swayosd restart pop obsolete — swayosd dropped at step 9.) |
 | **Dev symlink shell-ID drift** (0.3.0 removed path canonicalization) | Per-shell cache/state resets once when step 12 solidifies the store path — cosmetic. |
 | **Removing `qt6.qtdeclarative` from system packages** | Done at step 6 with immediate `trb` + manual-run verification; restore if any QML import breaks. |
 | **`rb` requires user action** | Protocol locked: Claude stops and requests activation; jftx runs `rb` and pastes output. `trb`/`nix flake check` cover most verification. |

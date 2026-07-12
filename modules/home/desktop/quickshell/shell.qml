@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import Quickshell.Services.Notifications
 import qs.island
 
 ShellRoot {
@@ -54,6 +55,17 @@ ShellRoot {
             Audio.toggleMute();
             island.flash();
         }
+    }
+
+    // The island IS the session notification daemon (atomic swaync
+    // replacement, spec). Capability flags: display-only toast — no
+    // actions, no markup; images and body text render.
+    NotificationServer {
+        actionsSupported: false
+        imageSupported: true
+        bodySupported: true
+        bodyMarkupSupported: false
+        onNotification: n => island.notify(n)
     }
 
     // Scripting/testing entry: qs -c island ipc call island toggle <name>

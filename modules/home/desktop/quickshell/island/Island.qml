@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import Quickshell.Services.Notifications
 import qs.theme
 
 // The dynamic island: a fixed, invisible top-center strip window whose
@@ -32,30 +33,92 @@ PanelWindow {
         expandedContent.item.setQuery(text);
     }
 
-    // Flash: display-only volume OSD, the 4th morph state (priority:
-    // expanded > flashing > peeked > pill). Restartable so key repeats
-    // hold it open; suppressed while expanded — the panel already shows
-    // the change live.
+    // Flash: display-only volume OSD (priority: expanded > notifying >
+    // flashing > peeked > pill). Restartable so key repeats hold it
+    // open; suppressed while expanded (the panel already shows the
+    // change live) and while a toast shows (toast wins the display —
+    // the volume still changes underneath).
     property bool flashing: false
 
     function flash(): void {
-        if (expanded)
+        if (expanded || notifying)
             return;
         flashing = true;
         flashOut.restart();
+    }
+
+    // Toast: display-only notification content, the 5th morph state.
+    // Rendering uses fields COPIED at display time so the Notification
+    // object can be expired/destroyed mid-fadeout without binding
+    // errors; notifHandle is kept only for lifecycle (expire/closed).
+    // Spec: docs/superpowers/specs/2026-07-12-island-notifications-design.md
+    property bool notifying: false
+    property var notifHandle: null
+    property string notifSummary: ""
+    property string notifBody: ""
+    property string notifAppIcon: ""
+    property string notifImage: ""
+    property bool notifCritical: false
+    // Deferred slot: the newest notification that arrived while
+    // expanded, shown on collapse if still fresh (spec: 30 s).
+    property var pending: null
+    property double pendingAt: 0
+
+    function notify(n): void {
+        n.tracked = true;
+        if (expanded) {
+            if (pending)
+                pending.dismiss();
+            pending = n;
+            pendingAt = Date.now();
+            return;
+        }
+        display(n);
+    }
+
+    function display(n): void {
+        if (notifHandle)
+            notifHandle.expire();
+        flashOut.stop();
+        flashing = false;
+        notifSummary = n.summary;
+        notifBody = n.body;
+        notifAppIcon = n.appIcon;
+        notifImage = n.image;
+        notifCritical = n.urgency === NotificationUrgency.Critical;
+        notifHandle = n;
+        notifying = true;
+        // expireTimeout is in SECONDS (double, -1 = sender default);
+        // Timer.interval is ms. Spec: sender value capped at 15 s,
+        // else 5 s normal / 10 s critical.
+        notifOut.interval = n.expireTimeout > 0
+            ? Math.min(n.expireTimeout, 15) * 1000
+            : notifCritical ? 10000 : 5000;
+        notifOut.restart();
     }
 
     onExpandedChanged: {
         if (expanded) {
             flashOut.stop();
             flashing = false;
+            // Expanding dismisses a showing toast (spec: no re-queue);
+            // cleanup runs via the closed handler.
+            if (notifHandle)
+                notifHandle.expire();
+        } else if (pending) {
+            const p = pending;
+            pending = null;
+            if (Date.now() - pendingAt < 30000)
+                display(p);
+            else
+                p.dismiss();
         }
     }
 
     // Hover peek: display-only third state (no focus grab, no keyboard).
     // Debounced so grazing the screen edge doesn't flicker the island.
     property bool peeked: false
-    readonly property bool showPeek: peeked && !expanded && !flashing
+    readonly property bool showPeek: peeked && !expanded && !flashing && !notifying
 
     anchors.top: true
     margins.top: 15
@@ -71,10 +134,10 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: expanded ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
-    // While flashing, the input region stays pill-sized: clicks in the
-    // flash's extra width pass through to windows below (spec).
+    // In the display-only states (flash, toast) the input region stays
+    // pill-sized: clicks in the extra width pass through (spec).
     mask: Region {
-        item: root.flashing ? pill : islandRect
+        item: root.flashing || root.notifying ? pill : islandRect
     }
 
     // Click anywhere outside the island: collapse.
@@ -110,6 +173,38 @@ PanelWindow {
         onTriggered: root.flashing = false
     }
 
+    Timer {
+        id: notifOut
+
+        onTriggered: {
+            if (root.notifHandle)
+                root.notifHandle.expire();
+        }
+    }
+
+    // Single cleanup path: our timer's expire(), an expand-dismissal,
+    // and a sender-side close all land here via the closed signal.
+    // Connections retargets when notifHandle changes, so a replaced
+    // notification's late closed can never tear down the new toast.
+    Connections {
+        target: root.notifHandle
+
+        function onClosed(reason) {
+            notifOut.stop();
+            root.notifying = false;
+            root.notifHandle = null;
+        }
+    }
+
+    // A pending notification withdrawn by its sender vacates the slot.
+    Connections {
+        target: root.pending
+
+        function onClosed(reason) {
+            root.pending = null;
+        }
+    }
+
     Rectangle {
         id: islandRect
 
@@ -119,22 +214,25 @@ PanelWindow {
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
         width: root.expanded ? expandedContent.implicitWidth
+             : root.notifying ? toastView.implicitWidth
              : root.flashing ? flashView.implicitWidth
              : root.showPeek ? peekView.implicitWidth
              : pill.implicitWidth + 2 * pillHPad
         height: root.expanded ? expandedContent.implicitHeight
+              : root.notifying ? toastView.implicitHeight
               : root.flashing ? flashView.implicitHeight
               : root.showPeek ? peekView.implicitHeight
               : pillHeight
-        // Collapsed pill stays a capsule; grown states (peek/expanded)
-        // square off to 18 (feel-tuned to jftx's reference notch).
+        // Collapsed pill stays a capsule; grown states (peek/expanded/
+        // toast) square off to 18 (feel-tuned to jftx's reference notch).
         // pillHeight/2, not height/2: a constant morph target keeps the
         // Behavior from re-targeting every frame while height animates.
-        radius: root.expanded || root.showPeek ? 18 : pillHeight / 2
+        radius: root.expanded || root.showPeek || root.notifying ? 18 : pillHeight / 2
         clip: true
         color: Theme.surface_container
         border.width: 1
-        border.color: Theme.primary
+        // Critical toasts tint the border as the whole urgency signal.
+        border.color: root.notifying && root.notifCritical ? Theme.error : Theme.primary
 
         HoverHandler {
             id: hover
@@ -188,7 +286,7 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             height: islandRect.pillHeight
-            opacity: root.expanded || root.showPeek || root.flashing ? 0 : 1
+            opacity: root.expanded || root.showPeek || root.flashing || root.notifying ? 0 : 1
             visible: opacity > 0
 
             Behavior on opacity {
@@ -217,6 +315,24 @@ PanelWindow {
 
             anchors.centerIn: parent
             opacity: root.flashing ? 1 : 0
+            visible: opacity > 0
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 150
+                }
+            }
+        }
+
+        NotificationToast {
+            id: toastView
+
+            anchors.centerIn: parent
+            summary: root.notifSummary
+            body: root.notifBody
+            appIcon: root.notifAppIcon
+            image: root.notifImage
+            opacity: root.notifying ? 1 : 0
             visible: opacity > 0
 
             Behavior on opacity {

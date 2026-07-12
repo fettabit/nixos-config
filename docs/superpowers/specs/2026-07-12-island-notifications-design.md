@@ -53,7 +53,9 @@ Changed files:
     active flash, copy fields, `n.tracked = true`, `notifying = true`,
     `notifOut.interval = timeoutFor(n)`, restart.
   - `timeoutFor(n)`: `n.expireTimeout > 0 ? min(n.expireTimeout, 15000)
-    : n.urgency === critical ? 10000 : 5000`.
+    : n.urgency === critical ? 10000 : 5000` — expireTimeout is in
+    **milliseconds** on this build (0.3.0 docs claim seconds; a
+    `notify-send -t` probe proved otherwise, 2026-07-12).
   - `notifOut` fires ⇒ `n.expire()`; the object's `closed` signal is the
     **single cleanup path** (`notifying = false`, handle released) whether
     closure came from our timer or from the sender. The handler must

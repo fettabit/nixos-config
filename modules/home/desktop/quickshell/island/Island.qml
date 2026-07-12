@@ -88,11 +88,12 @@ PanelWindow {
         notifCritical = n.urgency === NotificationUrgency.Critical;
         notifHandle = n;
         notifying = true;
-        // expireTimeout is in SECONDS (double, -1 = sender default);
-        // Timer.interval is ms. Spec: sender value capped at 15 s,
+        // expireTimeout is in MILLISECONDS (-1 = sender default) —
+        // the 0.3.0 docs say seconds, but a notify-send -t probe on
+        // this build proves ms. Spec: sender value capped at 15 s,
         // else 5 s normal / 10 s critical.
         notifOut.interval = n.expireTimeout > 0
-            ? Math.min(n.expireTimeout, 15) * 1000
+            ? Math.min(n.expireTimeout, 15000)
             : notifCritical ? 10000 : 5000;
         notifOut.restart();
     }

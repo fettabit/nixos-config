@@ -12,7 +12,7 @@
 
 **Plan-time facts (verified on-disk/docs 2026-07-12, no impl-verify needed):**
 - Installed 0.3.0 qmltypes confirm: `NotificationServer.{actionsSupported,imageSupported,bodySupported,bodyMarkupSupported,trackedNotifications}` + signal `notification(notification)`; `Notification.{id,tracked(rw),expireTimeout,appName,appIcon,summary,body,urgency,image,transient,hints}`, methods `expire()`/`dismiss()`, signal `closed(reason)`; singletons `NotificationUrgency.{Low,Normal,Critical}`, `NotificationCloseReason.{Expired,Dismissed,CloseRequested}`.
-- **`Notification.expireTimeout` is a double in SECONDS** (docs: "Time in seconds the notification should be valid for"; wire ms are converted). `notify-send -t 3000` ⇒ `expireTimeout == 3`. No `-t` ⇒ `-1`. Timer intervals are ms: `min(expireTimeout, 15) * 1000`.
+- **`Notification.expireTimeout` is a double in MILLISECONDS** on this build — the 0.3.0 docs claim seconds, but the Task 2 `notify-send -t` probe (2026-07-12) proved ms. `notify-send -t 3000` ⇒ `expireTimeout == 3000`. No `-t` ⇒ `-1`. Interval: `min(expireTimeout, 15000)`.
 - Docs: setting `tracked = false` ≡ `dismiss()`; `expire()` destroys the notification and hints timeout to the sender. Both end in `closed`.
 - `Quickshell.iconPath(icon: string, check: bool)` exists (returns `""` for missing icons when `check` is true). `IconImage` and `ClippingRectangle` exist as QML types in `Quickshell.Widgets` (qmldir-registered, not in the C++ qmltypes).
 - **swaync ships a D-Bus activation file** (`org.erikreider.swaync.service`: `Name=org.freedesktop.Notifications`) that survives until step 12 removes the `swaynotificationcenter` package (`modules/system/packages.nix:33`). If a notification arrives while *nobody* owns the bus name, D-Bus resurrects swaync. Mitigation is ordering: kill swaync, then start the island (it acquires the name; activation can't fire on an owned name). Until step 12, the post-reboot relaunch recipe is `pkill swaync 2>/dev/null; WAYLAND_DISPLAY=wayland-1 qs -c island -d -n`.
@@ -230,11 +230,11 @@ import Quickshell.Services.Notifications
         notifCritical = n.urgency === NotificationUrgency.Critical;
         notifHandle = n;
         notifying = true;
-        // expireTimeout is in SECONDS (double, -1 = sender default);
-        // Timer.interval is ms. Spec: sender value capped at 15 s,
-        // else 5 s normal / 10 s critical.
+        // expireTimeout is in MILLISECONDS (-1 = sender default;
+        // docs wrongly say seconds). Spec: sender cap 15 s, else
+        // 5 s normal / 10 s critical.
         notifOut.interval = n.expireTimeout > 0
-            ? Math.min(n.expireTimeout, 15) * 1000
+            ? Math.min(n.expireTimeout, 15000)
             : notifCritical ? 10000 : 5000;
         notifOut.restart();
     }

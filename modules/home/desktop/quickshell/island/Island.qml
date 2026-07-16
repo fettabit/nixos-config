@@ -356,6 +356,7 @@ PanelWindow {
             focus: true
             sourceComponent: root.expandedFeature === "launcher" ? launcherPanel
                 : root.expandedFeature === "volume" ? volumePanel
+                : root.expandedFeature === "wallpapers" ? wallpaperPanel
                 : root.expanded ? placeholderPanel : null
             opacity: root.expanded ? 1 : 0
             visible: opacity > 0
@@ -379,6 +380,14 @@ PanelWindow {
             id: volumePanel
 
             VolumePanel {
+                onDismissRequested: root.collapse()
+            }
+        }
+
+        Component {
+            id: wallpaperPanel
+
+            WallpaperPicker {
                 onDismissRequested: root.collapse()
             }
         }

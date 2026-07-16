@@ -1,33 +1,51 @@
 WALLPAPER_DIR="${WALLPAPER_DIR:-$HOME/wallpapers}"
-STATE="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper-current"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}"
+STATE="$STATE_DIR/wallpaper-current"
+QUEUE="$STATE_DIR/wallpaper-next"
 
-mapfile -t images < <(find -L "$WALLPAPER_DIR" -type f \
-  \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \
-     -o -iname '*.webp' -o -iname '*.gif' -o -iname '*.bmp' \) | sort)
-
-n=${#images[@]}
-if [ "$n" -eq 0 ]; then
-  echo "no images in $WALLPAPER_DIR" >&2
-  exit 1
+# A queued manual pick (wallpaper-set front door) beats random. The
+# queue file is consumed unconditionally — a stale/vanished path must
+# not wedge the next rotation — falling through to random if the image
+# no longer exists. Runs before the empty-dir guard so a valid queued
+# pick applies even when WALLPAPER_DIR is empty.
+pick=""
+if [ -f "$QUEUE" ]; then
+  queued="$(cat "$QUEUE")"
+  rm -f "$QUEUE"
+  [ -f "$queued" ] && pick="$queued"
 fi
+
+if [ -z "$pick" ]; then
+  mapfile -t images < <(find -L "$WALLPAPER_DIR" -type f \
+    \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \
+       -o -iname '*.webp' -o -iname '*.gif' -o -iname '*.bmp' \) | sort)
+
+  n=${#images[@]}
+  if [ "$n" -eq 0 ]; then
+    echo "no images in $WALLPAPER_DIR" >&2
+    exit 1
+  fi
+
+  # read last-set image to avoid picking it again back-to-back
+  current=""
+  [ -f "$STATE" ] && current="$(cat "$STATE")"
+
+  pick="$current"
+  if [ "$n" -gt 1 ]; then
+    while [ "$pick" = "$current" ]; do
+      pick="${images[RANDOM % n]}"
+    done
+  else
+    pick="${images[0]}"
+  fi
+fi
+
+# ---- apply: the repo's ONLY wallpaper apply path (manual + random) ----
 
 # start the daemon if it is not already up (safety net; autostart normally handles it)
 awww query >/dev/null 2>&1 || { awww-daemon >/dev/null 2>&1 & sleep 0.5; }
 
-# read last-set image to avoid picking it again back-to-back
-current=""
-[ -f "$STATE" ] && current="$(cat "$STATE")"
-
-pick="$current"
-if [ "$n" -gt 1 ]; then
-  while [ "$pick" = "$current" ]; do
-    pick="${images[RANDOM % n]}"
-  done
-else
-  pick="${images[0]}"
-fi
-
-mkdir -p "$(dirname "$STATE")"
+mkdir -p "$STATE_DIR"
 printf '%s\n' "$pick" > "$STATE"
 
 awww img "$pick" \

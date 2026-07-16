@@ -45,7 +45,7 @@ end
 ---- WALLPAPER ----
 ---------------------
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("systemctl --user start wallpaper.service"))
-hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("wallpaper-picker"))
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.global("quickshell:wallpapers"))
 
 ---------------------
 ---- SCREENSHOT ----

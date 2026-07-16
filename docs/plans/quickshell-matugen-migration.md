@@ -108,9 +108,12 @@ modules/home/desktop/quickshell/      # the QML tree = the "island" config
   island/VolumeSlider.qml             # thin-track slider, standalone — remounted by the Track C control center
   island/OutputDeviceList.qml         # sink radio rows, standalone — remounted by the Track C control center
   island/NotificationToast.qml        # display-only toast content: icon + summary + body, auto-dismiss (landed flat in island/, not notifications/)
-  wallpapers/WallpaperPicker.qml      # FolderListModel over ~/wallpapers, async thumbnails, select → wallpaper-set
-modules/home/services/scripts/wallpaper-set.sh  # NEW: shared "apply wallpaper <path>" (state file + awww img +
-                                                #   matugen + matugen-reload), extracted from wallpaper-random.sh
+  island/WallpaperPicker.qml          # GridView + FolderListModel over ~/wallpapers, async thumbnails,
+                                      #   select → wallpaper-set (landed flat in island/, not wallpapers/)
+modules/home/services/scripts/wallpaper-set.sh  # NEW: manual-pick front door — queues path to wallpaper-next,
+                                                #   starts wallpaper.service (activation resets the 10-min countdown;
+                                                #   revised 2026-07-15, was shared-apply extraction — apply block
+                                                #   stays in wallpaper-random.sh as the sole copy)
 ```
 
 QML conventions: root-relative imports (`import qs.theme`), no `../` escapes, one directory per concern mirroring the repo's `modules/` style. No bash/python sidecars — the shell's only external calls are `wallpaper-set` (picker selection) and nothing else; volume keys route through `global` dispatchers into the shell, where `Audio.qml` (the sole PipeWire writer) applies them (revised 2026-07-09; was swayosd-client).
@@ -122,7 +125,8 @@ modules/home/default.nix          # import desktop/quickshell.nix
 modules/system/packages.nix       # remove quickshell + qt6.qtdeclarative (programs.quickshell owns the package;
                                   #   verify at step 6 trb/manual run that nothing else needed qtdeclarative)
 modules/home/services/wallpaper.nix              # add wallpaper-set writeShellApplication; wallpaper-random
-modules/home/services/scripts/wallpaper-random.sh #   becomes "pick non-repeating, then exec wallpaper-set"
+modules/home/services/scripts/wallpaper-random.sh #   consumes a queued wallpaper-next pick, else random no-repeat
+                                                 #   (apply block stays here — sole copy; revised 2026-07-15)
 modules/home/desktop/hypr/modules/binds.lua      # ALT+SPACE → global quickshell:launcher (rofi drun bind removed);
                                                  # ALT+SHIFT+W → global quickshell:wallpapers (script kept as fallback);
                                                  # SUPER+V → global quickshell:volume; F10/F11/F12 + XF86Audio aliases
@@ -151,7 +155,7 @@ CLAUDE.md                                        # step 12: unstable channel, is
 
 **Matugen**: pipeline untouched. `Theme.qml` consumes `/tmp/qs_colors.json` event-driven (`FileView.watchChanges`); recolor latency drops from ≤1 s (reference polling) to effectively instant. All fallback behavior from Track A remains.
 
-**Wallpaper machinery**: extracting `wallpaper-set` keeps a single code path shared by the random timer, the rofi fallback picker, and the QML picker — state-file no-repeat logic preserved for all three.
+**Wallpaper machinery (revised 2026-07-15)**: manual picks route *through* `wallpaper.service` — `wallpaper-set <path>` queues to `wallpaper-next` and starts the service, whose `wallpaper-random.sh` consumes the queue (else picks random) and holds the repo's only apply block. One code path for the timer, the rofi fallback, and the QML picker, and service activation resets the 10-min countdown for free. Never restart `wallpaper.timer` for the reset: `OnActiveSec=5s` (load-bearing — it regenerates the tmpfs matugen outputs after reboot) would fire a random pick 5 s later. State-file no-repeat preserved for all three entry points. Spec: `docs/superpowers/specs/2026-07-15-wallpaper-picker-design.md`.
 
 ## 3.5 Step-by-step implementation order
 
@@ -165,7 +169,7 @@ CLAUDE.md                                        # step 12: unstable channel, is
 8. **Launcher.** `Launcher.qml` (DesktopEntries + fuzzy filter) as an island expansion; `binds.lua`: `ALT+SPACE` → `global, quickshell:launcher`, rofi drun bind removed (same commit). Verify: ALT+SPACE expands island, fuzzy-finds, launches, ESC collapses. **✅ done 2026-07-08** (spec + plan in docs/superpowers/; inverted-fzf layout with breathing height per jftx's design — search bar at the panel's bottom edge, results stack upward, tiered fuzzy ranking in fuzzy.js; Lua side uses `hl.dsp.global("quickshell:launcher")`).
 9. **Volume.** Spec: `docs/superpowers/specs/2026-07-09-island-volume-design.md` (revised 2026-07-09; replaces the swayosd plan). `Audio.qml` singleton (sole PipeWire writer) + island **flash** OSD (4th display-only morph state; `showPeek` gains `&& !flashing`) + `VolumePanel.qml` (slim slider / mute / output-device radio rows — slider + device list standalone for the Track C control center) on `SUPER+V`; `binds.lua`: F10/F11/F12 + XF86Audio aliases → `global quickshell:volume{Mute,Down,Up}`, wheel on pill/peek ±5%+flash; **same step removes `services.swayosd` + the matugen swayosd template**. Verify: keys flash the island and move `wpctl get-volume`; hold-to-ramp (impl-verify: `repeating` × `global`, fallback onPressed/onReleased ramp); panel slider + device switch live (impl-verify: `Pipewire.preferredDefaultAudioSink`, fallback `wpctl set-default`); no flash while expanded; island recolors on wallpaper change mid-panel. **✅ done 2026-07-09** (spec + plan in docs/superpowers/).
 10. **Notifications.** Spec: `docs/superpowers/specs/2026-07-12-island-notifications-design.md`. `NotificationServer` in `shell.qml` (actions off, image/body on) → `NotificationToast.qml`, a 5th display-only morph state (priority `expanded > notifying > flashing > peeked > pill`; pill-sized mask like the flash). Newest-replaces on bursts; timeout = sender `expireTimeout` capped 15 s, else 5 s / 10 s critical (error-tint border); deferred to a single 30 s-fresh `pending` slot while expanded. **Same commit** removes swaync from `autostart.lua` (atomic bus-name swap; package stays until step 12). Verify pre-rb: `pkill swaync` + qs relaunch, then `notify-send` drives all states (grim); post-rb: no swaync in session, `journalctl --user` shows no daemon conflict. **✅ done 2026-07-12** (spec + plan in docs/superpowers/; expireTimeout is ms on this build — docs wrong; swaync D-Bus activation file survives until step 12: relaunch recipe is `pkill swaync` then `qs -c island -d -n`).
-11. **Wallpaper picker.** `wallpaper-set` extraction in `wallpaper.nix` + scripts; `WallpaperPicker.qml` thumbnail grid as island expansion; `ALT+SHIFT+W` → `global, quickshell:wallpapers` (rofi picker script kept, bind replaced). Verify: grid opens, selection sets wallpaper + full retheme cascade (island included), 10-min timer no-repeat logic intact.
+11. **Wallpaper picker.** Spec: `docs/superpowers/specs/2026-07-15-wallpaper-picker-design.md`. `wallpaper-set` front door in `wallpaper.nix` + scripts (queue file + service start — resets the 10-min countdown; apply block stays in `wallpaper-random.sh`, rofi picker keeps only its menu); `WallpaperPicker.qml` thumbnail grid (GridView + FolderListModel, arrows + Enter, apply-and-stay-open) as island expansion; `ALT+SHIFT+W` → `global, quickshell:wallpapers` (rofi picker script kept, bind replaced). Verify: grid opens, selection sets wallpaper + full retheme cascade (island included), timer NEXT ≈ 10 min after a manual pick, 10-min timer no-repeat logic intact, rofi fallback still end-to-end.
 12. **Systemd flip + solidify.** `programs.quickshell.systemd.enable = true`; `autostart.lua` drops waybar (`ALT+R` launch bind removed; waybar/swaync files + packages stay in repo); quickshell config source switched to the pure store path; CLAUDE.md updated (unstable channel, island shell, theming pipeline, this plan). Verify: **rb + full reboot (ask jftx)** → clean session: island up via systemd (`systemctl --user status quickshell`), 10-min retheme cascade works, ALT binds intact, `nix flake check` clean. PR + merge.
 
 **Track C — later sessions (planned, not now)**

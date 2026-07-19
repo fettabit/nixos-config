@@ -18,7 +18,6 @@
     gamescope
     python3
     nautilus
-    waybar
     fastfetch
     hyprpolkitagent
     grim
@@ -30,7 +29,6 @@
     playerctl
     stylua
     alejandra
-    swaynotificationcenter
     networkmanagerapplet
     wl-clipboard
     tree

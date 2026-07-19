@@ -19,9 +19,9 @@ ShellRoot {
     }
 
     GlobalShortcut {
-        name: "volume"
-        description: "Toggle the island volume panel"
-        onPressed: island.toggle("volume")
+        name: "control"
+        description: "Toggle the island control center"
+        onPressed: island.toggle("control")
     }
 
     GlobalShortcut {
@@ -78,6 +78,10 @@ ShellRoot {
 
         function collapse(): void {
             island.collapse();
+        }
+
+        function dnd(on: bool): void {
+            island.dnd = on;
         }
 
         function search(text: string): void {

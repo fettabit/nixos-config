@@ -30,7 +30,7 @@ Column {
             Rectangle {
                 anchors.fill: parent
                 radius: 8
-                color: Theme.surface_container_high
+                color: Theme.surface_container_highest
                 opacity: rowMouse.containsMouse && !row.isCurrent ? 0.4 : 0
 
                 Behavior on opacity {

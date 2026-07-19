@@ -40,6 +40,10 @@ PanelWindow {
     // the volume still changes underneath).
     property bool flashing: false
 
+    // DND (spec 2026-07-19): total silence while on — enforced by the
+    // gate in notify(). State is session-only; a fresh shell starts false.
+    property bool dnd: false
+
     function flash(): void {
         if (expanded || notifying)
             return;
@@ -65,6 +69,12 @@ PanelWindow {
     property double pendingAt: 0
 
     function notify(n): void {
+        // DND (spec 2026-07-19): total silence — everything, critical
+        // included, is dismissed unseen; nothing queues or replays.
+        if (dnd) {
+            n.dismiss();
+            return;
+        }
         n.tracked = true;
         if (expanded) {
             if (pending)
@@ -355,7 +365,7 @@ PanelWindow {
             active: root.expanded
             focus: true
             sourceComponent: root.expandedFeature === "launcher" ? launcherPanel
-                : root.expandedFeature === "volume" ? volumePanel
+                : root.expandedFeature === "control" ? controlPanel
                 : root.expandedFeature === "wallpapers" ? wallpaperPanel
                 : root.expanded ? placeholderPanel : null
             opacity: root.expanded ? 1 : 0
@@ -377,9 +387,11 @@ PanelWindow {
         }
 
         Component {
-            id: volumePanel
+            id: controlPanel
 
-            VolumePanel {
+            ControlCenter {
+                dnd: root.dnd
+                onDndToggled: root.dnd = !root.dnd
                 onDismissRequested: root.collapse()
             }
         }

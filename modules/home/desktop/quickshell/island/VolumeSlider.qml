@@ -1,69 +1,83 @@
 import QtQuick
 import qs.theme
 
-// Thin-track slider (flash-matched vocabulary: 4 px track, small knob).
-// Deliberately Audio-free — value in via property, changes out via
-// moved() — so the Track C control center can remount it unchanged.
+// macOS-style capsule slider: thick rounded track, primary fill, speaker
+// glyph embedded in the fill's left end (click = mute). Deliberately
+// Audio-free — value/muted in via properties, moved()/muteToggled() out —
+// so any panel can mount it.
+// While pressed the slider renders its own drag position and ignores
+// external value re-binds: the value → PipeWire → value round trip lags
+// ~0.5 s and quantized drags into ~10 coarse steps (#10).
 Item {
     id: root
 
     property real value: 0
+    property bool muted: false
     signal moved(real newValue)
+    signal muteToggled()
 
-    implicitHeight: 24
+    readonly property real shown: drag.pressed ? drag.dragValue : value
 
-    function emitFromX(x: real): void {
-        moved(Math.max(0, Math.min(1, x / track.width)));
+    implicitHeight: 36
+
+    function valueAt(x: real): real {
+        return Math.max(0, Math.min(1, x / width));
     }
 
     Rectangle {
         id: track
 
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 4
-        radius: 2
+        anchors.fill: parent
+        radius: height / 2
         color: Theme.surface_container_highest
+        clip: true
 
         Rectangle {
             anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            width: parent.width * root.value
-            height: parent.height
-            radius: 2
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: Math.max(track.height, track.width * root.shown)
+            radius: track.radius
             color: Theme.primary
         }
     }
 
-    Rectangle {
-        id: knob
-
-        x: Math.max(0, Math.min(track.width - width, root.value * track.width - width / 2))
+    Text {
+        anchors.left: parent.left
+        anchors.leftMargin: 13
         anchors.verticalCenter: parent.verticalCenter
-        width: 14
-        height: 14
-        radius: 7
-        color: Theme.primary
-        scale: mouse.pressed ? 1.25 : 1
+        text: root.muted ? "\uf026" : "\uf028"
+        color: Theme.on_primary
+        font.family: Theme.iconFontFamily
+        font.pixelSize: 16
+    }
 
-        Behavior on scale {
-            NumberAnimation {
-                duration: 200
-                easing.type: Easing.OutBack
+    MouseArea {
+        id: drag
+
+        property real dragValue: 0
+
+        anchors.fill: parent
+        onPressed: event => {
+            dragValue = root.valueAt(event.x);
+            root.moved(dragValue);
+        }
+        onPositionChanged: event => {
+            if (pressed) {
+                dragValue = root.valueAt(event.x);
+                root.moved(dragValue);
             }
         }
     }
 
+    // On top of the drag area: the glyph zone eats its own clicks for
+    // mute; drags simply start to its right.
     MouseArea {
-        id: mouse
-
-        anchors.fill: parent
-        onPressed: event => root.emitFromX(event.x)
-        onPositionChanged: event => {
-            if (pressed)
-                root.emitFromX(event.x);
-        }
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: 40
+        onClicked: root.muteToggled()
     }
 
     WheelHandler {

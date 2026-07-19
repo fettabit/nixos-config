@@ -1,17 +1,16 @@
-{ ... }:
-{
-    imports = [
-        ../../hardware-configuration.nix
-        ../../modules/system
-    ];
+{...}: {
+  imports = [
+    ../../hardware-configuration.nix
+    ../../modules/system
+  ];
 
-    networking.hostName = "blackgarden";
+  networking.hostName = "blackgarden";
 
-    users.users.jftx = {
-        isNormalUser = true;
-        extraGroups = [ "wheel" ];
-        packages = [];
-    };
+  users.users.jftx = {
+    isNormalUser = true;
+    extraGroups = ["wheel" "gamemode"];
+    packages = [];
+  };
 
-    system.stateVersion = "26.05";
+  system.stateVersion = "26.05";
 }

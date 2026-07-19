@@ -41,10 +41,6 @@ output_path = "~/.config/qt5ct/qss/matugen-style.qss"
 input_path = "templates/qt-style.qss.template"
 output_path = "~/.config/qt6ct/qss/matugen-style.qss"
 
-[templates.swayosd]
-input_path = "templates/swayosd.css.template"
-output_path = "~/.config/swayosd/style.css"
-
 [templates.vesktop]
 input_path = "templates/discord.css.template"
 output_path = "~/.config/vesktop/themes/matugen.theme.css"

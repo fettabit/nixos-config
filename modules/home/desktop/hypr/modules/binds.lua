@@ -4,7 +4,6 @@
 
 local terminal = "kitty"
 local fileManager = "nautilus"
-local menu = "rofi -show drun"
 
 ---------------------
 ---- KEYBINDINGS ----
@@ -22,10 +21,10 @@ hl.bind(
 )
 hl.bind(mainMod .. " + HOME", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd(menu))
+hl.bind(mainMod .. " + SPACE", hl.dsp.global("quickshell:launcher"))
+hl.bind("SUPER + V", hl.dsp.global("quickshell:volume"))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit")) -- dwindle only
-hl.bind(mainMod .. " + r", hl.dsp.exec_cmd("/home/jftx/nixos/modules/home/desktop/waybar/scripts/launch.sh"))
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }))
@@ -45,11 +44,18 @@ end
 ---- WALLPAPER ----
 ---------------------
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("systemctl --user start wallpaper.service"))
-hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("wallpaper-picker"))
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.global("quickshell:wallpapers"))
 
--- Example special workspace (scratchpad)
-hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("magic"))
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
+---------------------
+---- SCREENSHOT ----
+---------------------
+-- drag-select a region; ESC cancels (slurp fails -> exit, no file written)
+hl.bind(
+	mainMod .. " + S",
+	hl.dsp.exec_cmd(
+		[[sh -c 'g=$(slurp) || exit; d=$HOME/Pictures/Screenshots; mkdir -p "$d"; f=$d/$(date +%F_%H-%M-%S).png; grim -g "$g" - | tee "$f" | wl-copy; notify-send -i "$f" "Screenshot saved" "$f"']]
+	)
+)
 
 -- Scroll through existing workspaces with mainMod + scroll
 hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
@@ -59,26 +65,19 @@ hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
--- Laptop multimedia keys for volume and LCD brightness
-hl.bind(
-	"XF86AudioRaiseVolume",
-	hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"),
-	{ locked = true, repeating = true }
-)
-hl.bind(
-	"XF86AudioLowerVolume",
-	hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),
-	{ locked = true, repeating = true }
-)
-hl.bind(
-	"XF86AudioMute",
-	hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),
-	{ locked = true, repeating = true }
-)
+-- Volume → island (Audio.qml is the PipeWire writer; the island flashes
+-- as the OSD). jftx's board emits plain F10/F11/F12 — the XF86Audio
+-- variants never fire here but stay as aliases for other keyboards.
+hl.bind("F12", hl.dsp.global("quickshell:volumeUp"), { locked = true, repeating = true })
+hl.bind("F11", hl.dsp.global("quickshell:volumeDown"), { locked = true, repeating = true })
+hl.bind("F10", hl.dsp.global("quickshell:volumeMute"), { locked = true })
+hl.bind("XF86AudioRaiseVolume", hl.dsp.global("quickshell:volumeUp"), { locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.global("quickshell:volumeDown"), { locked = true, repeating = true })
+hl.bind("XF86AudioMute", hl.dsp.global("quickshell:volumeMute"), { locked = true })
 hl.bind(
 	"XF86AudioMicMute",
 	hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),
-	{ locked = true, repeating = true }
+	{ locked = true }
 )
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+"), { locked = true, repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%-"), { locked = true, repeating = true })

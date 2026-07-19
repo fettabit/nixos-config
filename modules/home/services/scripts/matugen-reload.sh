@@ -12,9 +12,6 @@ if [ -f "$HOME/.config/cava/config_base" ]; then
   killall -USR1 cava 2>/dev/null || true
 fi
 
-# SwayOSD: restarting the service is the only way to reload its CSS.
-systemctl --user try-restart swayosd.service 2>/dev/null || true
-
 # GTK live-reload hack: bounce theme + color-scheme so running GTK3/4
 # apps flush caches and re-read the imported Matugen CSS.
 if command -v gsettings >/dev/null 2>&1; then

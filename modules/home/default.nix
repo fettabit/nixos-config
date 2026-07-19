@@ -13,8 +13,8 @@
     ./services/ssh-agent.nix
     ./services/wallpaper.nix
     ./desktop/hyprland.nix
-    ./desktop/waybar.nix
     ./desktop/theme.nix
+    ./desktop/quickshell.nix
   ];
 
   home.username = "jftx";

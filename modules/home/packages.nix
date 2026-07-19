@@ -7,5 +7,6 @@
     vesktop
     uv
     nodejs
+    libnotify
   ];
 }

@@ -8,10 +8,16 @@
     curl
     btop
     kitty
+    lutris
+    wine-wayland
+    winetricks
+    wineWow64Packages.staging
+    vulkan-tools
+    vulkan-loader
+    mangohud
+    gamescope
     python3
     nautilus
-    waybar
-    quickshell
     fastfetch
     hyprpolkitagent
     grim
@@ -23,8 +29,6 @@
     playerctl
     stylua
     alejandra
-    qt6.qtdeclarative
-    swaynotificationcenter
     networkmanagerapplet
     wl-clipboard
     tree

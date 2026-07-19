@@ -22,7 +22,7 @@ hl.bind(
 hl.bind(mainMod .. " + HOME", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + SPACE", hl.dsp.global("quickshell:launcher"))
-hl.bind("SUPER + V", hl.dsp.global("quickshell:volume"))
+hl.bind("SUPER + V", hl.dsp.global("quickshell:control"))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit")) -- dwindle only
 

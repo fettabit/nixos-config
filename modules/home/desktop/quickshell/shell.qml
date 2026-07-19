@@ -19,9 +19,9 @@ ShellRoot {
     }
 
     GlobalShortcut {
-        name: "volume"
-        description: "Toggle the island volume panel"
-        onPressed: island.toggle("volume")
+        name: "control"
+        description: "Toggle the island control center"
+        onPressed: island.toggle("control")
     }
 
     GlobalShortcut {

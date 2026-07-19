@@ -30,7 +30,7 @@
 **Interfaces:**
 - Produces: `quickshell.service` user unit (`ExecStart=quickshell --config island`, `Restart=on-failure`, `After`/`WantedBy=graphical-session.target`); `~/.config/quickshell/island` becomes a read-only store symlink; `rb` alias restarts the unit. Task 4's checklist depends on all three.
 
-- [ ] **Step 1: Replace `modules/home/desktop/quickshell.nix`** with:
+- [x] **Step 1: Replace `modules/home/desktop/quickshell.nix`** with:
 
 ```nix
 {...}: {
@@ -53,7 +53,7 @@
 
 (The `config` module arg drops out — it existed only for `mkOutOfStoreSymlink`.)
 
-- [ ] **Step 2: Edit `modules/home/programs/bash.nix`** — old:
+- [x] **Step 2: Edit `modules/home/programs/bash.nix`** — old:
 
 ```nix
       rb = "nixos-rebuild switch --flake ~/nixos#blackgarden --sudo && hyprctl reload";
@@ -65,19 +65,19 @@ new:
       rb = "nixos-rebuild switch --flake ~/nixos#blackgarden --sudo && hyprctl reload && systemctl --user restart quickshell";
 ```
 
-- [ ] **Step 3: Validate**
+- [x] **Step 3: Validate**
 
 Run: `git add -A && nix flake check`
 Expected: passes (eval warnings acceptable, no errors).
 
-- [ ] **Step 4: Build**
+- [x] **Step 4: Build**
 
 Run: `nixos-rebuild build --flake ~/nixos#blackgarden --sudo`
 Expected: completes; `./result` symlink appears. (Sandbox note: if the
 harness sandbox blocks the daemon socket, rerun with escalated
 permissions — build only, never switch.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -103,7 +103,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: nothing from Task 1 (independent deletions; ordered second only for commit narrative).
 - Produces: a session with no waybar and no swaync D-Bus activation file — Task 4's checklist items 2–3 depend on this.
 
-- [ ] **Step 1: Replace `autostart.lua`** with:
+- [x] **Step 1: Replace `autostart.lua`** with:
 
 ```lua
 -------------------
@@ -117,13 +117,13 @@ end)
 
 (waybar line gone; `awww-daemon` stays — wallpaper daemon, load-bearing.)
 
-- [ ] **Step 2: Delete the ALT+R bind** — remove this line from `binds.lua`:
+- [x] **Step 2: Delete the ALT+R bind** — remove this line from `binds.lua`:
 
 ```lua
 hl.bind(mainMod .. " + r", hl.dsp.exec_cmd("/home/jftx/nixos/modules/home/desktop/waybar/scripts/launch.sh"))
 ```
 
-- [ ] **Step 3: Delete the waybar module wiring**
+- [x] **Step 3: Delete the waybar module wiring**
 
 Remove from `modules/home/default.nix` imports:
 
@@ -133,7 +133,7 @@ Remove from `modules/home/default.nix` imports:
 
 Then: `git rm -r modules/home/desktop/waybar modules/home/desktop/waybar.nix`
 
-- [ ] **Step 4: Delete the packages** — remove from `modules/system/packages.nix`:
+- [x] **Step 4: Delete the packages** — remove from `modules/system/packages.nix`:
 
 ```nix
     waybar
@@ -145,13 +145,13 @@ and
     swaynotificationcenter
 ```
 
-- [ ] **Step 5: Validate + build**
+- [x] **Step 5: Validate + build**
 
 Run: `git add -A && nix flake check && nixos-rebuild build --flake ~/nixos#blackgarden --sudo`
 Expected: both pass — nothing else references waybar/swaync (verified in
 exploration; a failure here means a missed reference — grep, fix, rerun).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -176,7 +176,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 Fact deltas driving the rewrite: channel is `nixos-unstable` (was: 26.05); home-manager tracks master (was: release-26.05); GRUB EFI + os-prober limit 5 + `linuxPackages_latest` (was: systemd-boot limit 10); root `configuration.nix`/`home.nix` already deleted (stale-files note must go); `modules/system` gained `gaming.nix`; home imports gained `programs/matugen.nix`, `desktop/{theme,quickshell}.nix`; aliases gained `gs`/`gp`/`trb`; autologin is `services.getty.autologinUser`; island + theming sections are new.
 
-- [ ] **Step 1: Replace `CLAUDE.md`** with:
+- [x] **Step 1: Replace `CLAUDE.md`** with:
 
 ````markdown
 # CLAUDE.md
@@ -242,7 +242,7 @@ Where to make a change:
 - **Spicetify** comes from its own flake input. `modules/home/programs/spicetify.nix` imports `inputs.spicetify-nix.homeManagerModules.default` and reads packages from its `legacyPackages` (marketplace app, adblockify + shuffle extensions, `text` theme).
 ````
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add CLAUDE.md
@@ -264,13 +264,13 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: Tasks 1–3 committed; `quickshell.service`, swaync-free session, new rb alias.
 - Produces: verified Track B end state; PR closing issue #6.
 
-- [ ] **Step 1: CHECKPOINT — request activation (jftx)**
+- [x] **Step 1: CHECKPOINT — request activation (jftx)**
 
 No manual island instance is running (confirmed 2026-07-18), so the
 sequence is: `rb` → paste output → **full reboot**. (Guard: if a manual
 `qs` instance is somehow running at rb time, quit it first.)
 
-- [ ] **Step 2: Post-reboot checklist** (batch probes tight — jftx's clicks land in focus-grabbed expansions)
+- [x] **Step 2: Post-reboot checklist** (batch probes tight — jftx's clicks land in focus-grabbed expansions)
 
 ```bash
 systemctl --user status quickshell --no-pager | head -8   # active (running); loaded from graphical-session.target
@@ -285,13 +285,13 @@ jftx keyboard round (one batch): ALT+SPACE launcher · SUPER+V volume ·
 F10–F12 flash · ALT+SHIFT+W grid + pick (cascade recolors island, NEXT
 resets ≈ 10 min) · ALT+R does nothing.
 
-- [ ] **Step 3: Done marker** — append to the master plan's step 12 line (before `PR + merge.` stays intact after it):
+- [x] **Step 3: Done marker** — append to the master plan's step 12 line (before `PR + merge.` stays intact after it):
 
 ```
 **✅ done 2026-07-18** (spec + plan in docs/superpowers/; waybar/swaync fully removed — files AND packages, superseding this line's earlier "stay in repo" wording; rb alias now chains systemctl --user restart quickshell)
 ```
 
-- [ ] **Step 4: Commit + push**
+- [x] **Step 4: Commit + push**
 
 ```bash
 git add docs/plans/quickshell-matugen-migration.md
@@ -301,7 +301,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 git push
 ```
 
-- [ ] **Step 5: PR** — finishing-a-development-branch flow: code review pass over the branch diff, then:
+- [x] **Step 5: PR** — finishing-a-development-branch flow: code review pass over the branch diff, then:
 
 ```bash
 gh pr create --title "Track B: quickshell island shell core (steps 6-12)" --body "$(cat <<'EOF'

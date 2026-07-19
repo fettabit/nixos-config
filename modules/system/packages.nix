@@ -30,6 +30,7 @@
     claude-code
     codex
     awww
+    celluloid
     matugen
     rofi
     playerctl

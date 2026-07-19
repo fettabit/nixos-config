@@ -22,6 +22,11 @@
     hyprpolkitagent
     grim
     slurp
+    cmatrix
+    pipes-rs
+    tty-clock
+    figlet
+    asciiquarium
     claude-code
     codex
     awww

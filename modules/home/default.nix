@@ -10,6 +10,7 @@
     ./programs/spicetify.nix
     ./programs/bash.nix
     ./programs/matugen.nix
+    ./programs/obs-studio.nix
     ./services/ssh-agent.nix
     ./services/wallpaper.nix
     ./desktop/hyprland.nix

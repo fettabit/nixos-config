@@ -23,6 +23,7 @@
     grim
     slurp
     claude-code
+    codex
     awww
     matugen
     rofi

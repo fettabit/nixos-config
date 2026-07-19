@@ -80,6 +80,10 @@ ShellRoot {
             island.collapse();
         }
 
+        function dnd(on: bool): void {
+            island.dnd = on;
+        }
+
         function search(text: string): void {
             island.search(text);
         }

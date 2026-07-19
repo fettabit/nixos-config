@@ -69,6 +69,12 @@ PanelWindow {
     property double pendingAt: 0
 
     function notify(n): void {
+        // DND (spec 2026-07-19): total silence — everything, critical
+        // included, is dismissed unseen; nothing queues or replays.
+        if (dnd) {
+            n.dismiss();
+            return;
+        }
         n.tracked = true;
         if (expanded) {
             if (pending)

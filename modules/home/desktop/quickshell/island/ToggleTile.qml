@@ -14,6 +14,7 @@ Item {
     property string status: ""
     property bool active: false
     signal toggled()
+    signal openRequested()
 
     implicitHeight: 44
     opacity: enabled ? 1 : 0.4
@@ -40,6 +41,12 @@ Item {
                 color: root.active ? Theme.on_primary : Theme.on_surface
                 font.family: Theme.iconFontFamily
                 font.pixelSize: 15
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                enabled: root.enabled
+                onClicked: root.toggled()
             }
         }
 
@@ -69,9 +76,11 @@ Item {
         }
     }
 
+    // Label zone (right of the icon circle): opens the detail page.
     MouseArea {
         anchors.fill: parent
+        anchors.leftMargin: 44
         enabled: root.enabled
-        onClicked: root.toggled()
+        onClicked: root.openRequested()
     }
 }

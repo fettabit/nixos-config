@@ -84,6 +84,14 @@ ShellRoot {
             island.dnd = on;
         }
 
+        function connectivity(tab: string): void {
+            island.openConnectivity(tab);
+        }
+
+        function connectivitySub(sub: string): void {
+            island.openConnectivitySub(sub);
+        }
+
         function search(text: string): void {
             island.search(text);
         }

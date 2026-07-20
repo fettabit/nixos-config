@@ -33,6 +33,13 @@ PanelWindow {
         expandedContent.item.setQuery(text);
     }
 
+    // Scripted/deep entry: open the control center on the connectivity
+    // page. Reached via `qs -c island ipc call island connectivity <tab>`.
+    function openConnectivity(tab: string): void {
+        expandedFeature = "control";
+        expandedContent.item.openConnectivity(tab);
+    }
+
     // Flash: display-only volume OSD (priority: expanded > notifying >
     // flashing > peeked > pill). Restartable so key repeats hold it
     // open; suppressed while expanded (the panel already shows the
@@ -133,9 +140,9 @@ PanelWindow {
 
     anchors.top: true
     margins.top: 15
-    // Strip must fit the largest expansion (launcher, step 8).
+    // Strip must fit the largest expansion (connectivity page).
     implicitWidth: 1200
-    implicitHeight: 640
+    implicitHeight: 760
     color: "transparent"
     // Reserve only the collapsed pill strip so windows tile below it;
     // expansions overlay the window area instead of reflowing it.

@@ -105,7 +105,7 @@ Item {
             focus: true
             sourceComponent: root.subview === "radial"
                 ? (root.tab === "internet" ? internetRadial : bluetoothRadial)
-                : (root.tab === "bluetooth" ? btScan : scanPlaceholder)
+                : (root.tab === "bluetooth" ? btScan : wifiScan)
         }
 
         // Bottom bar: tab switcher + power.
@@ -285,16 +285,38 @@ Item {
         }
     }
 
-    Component {
-        id: scanPlaceholder
+    // PSK failure surface: remember the SSID whose connect failed for the
+    // wrong-password reasons (plan-time fact: NoSecrets | WifiAuthTimeout
+    // | WifiClientFailed).
+    property string wifiErrorSsid: ""
+    property var pendingNetwork: null
 
-        Item {
-            Text {
-                anchors.centerIn: parent
-                text: "scan: " + root.tab
-                color: Theme.on_surface
-                font.family: Theme.fontFamily
-                font.pixelSize: 18
+    Connections {
+        target: root.pendingNetwork
+
+        function onConnectionFailed(reason) {
+            if (reason === ConnectionFailReason.NoSecrets
+                || reason === ConnectionFailReason.WifiAuthTimeout
+                || reason === ConnectionFailReason.WifiClientFailed)
+                root.wifiErrorSsid = root.pendingNetwork.name;
+        }
+    }
+
+    Component {
+        id: wifiScan
+
+        WifiNetworkList {
+            networks: root.wifiDevice ? [...root.wifiDevice.networks.values] : []
+            errorSsid: root.wifiErrorSsid
+            onConnectRequested: network => {
+                root.wifiErrorSsid = "";
+                root.pendingNetwork = network;
+                network.connect();
+            }
+            onPskSubmitted: (network, psk) => {
+                root.wifiErrorSsid = "";
+                root.pendingNetwork = network;
+                network.connectWithPsk(psk);
             }
         }
     }

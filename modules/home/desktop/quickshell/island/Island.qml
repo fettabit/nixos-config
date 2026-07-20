@@ -40,6 +40,10 @@ PanelWindow {
         expandedContent.item.openConnectivity(tab);
     }
 
+    function openConnectivitySub(sub: string): void {
+        expandedContent.item.setConnectivitySubview(sub);
+    }
+
     // Flash: display-only volume OSD (priority: expanded > notifying >
     // flashing > peeked > pill). Restartable so key repeats hold it
     // open; suppressed while expanded (the panel already shows the

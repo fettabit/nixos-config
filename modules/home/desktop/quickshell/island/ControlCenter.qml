@@ -29,6 +29,13 @@ Item {
         page = "connectivity";
     }
 
+    // Scripted-verification path: flip the connectivity page's subview
+    // (radial ↔ scan) — scan entry has no IPC-reachable click otherwise.
+    function setConnectivitySubview(sub: string): void {
+        if (page === "connectivity" && pageLoader.item)
+            pageLoader.item.subview = sub;
+    }
+
     // Root page keeps the CC's fixed design width (a ColumnLayout's
     // implicitWidth is layout-computed and can't be overridden); the
     // connectivity page brings its own implicit size.

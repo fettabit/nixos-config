@@ -72,6 +72,29 @@ Item {
         return (d.battery <= 1 ? Math.round(d.battery * 100) : Math.round(d.battery)) + "%";
     }
 
+    // Scan lifecycle (spec hard rule): scanning is true ONLY while its
+    // scan subview is visible. Imperative sync + belt-and-braces cleanup
+    // on every exit path, destruction included.
+    function syncScanning(): void {
+        const btScan = visible && tab === "bluetooth" && subview === "scan";
+        const wifiScan = visible && tab === "internet" && subview === "scan";
+        if (btAdapter)
+            btAdapter.discovering = btScan && btAdapter.enabled;
+        if (wifiDevice)
+            wifiDevice.scannerEnabled = wifiScan && Networking.wifiEnabled;
+    }
+
+    onSubviewChanged: syncScanning()
+    onVisibleChanged: syncScanning()
+    Component.onCompleted: syncScanning()
+
+    Component.onDestruction: {
+        if (btAdapter)
+            btAdapter.discovering = false;
+        if (wifiDevice)
+            wifiDevice.scannerEnabled = false;
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 8
@@ -82,7 +105,7 @@ Item {
             focus: true
             sourceComponent: root.subview === "radial"
                 ? (root.tab === "internet" ? internetRadial : bluetoothRadial)
-                : scanPlaceholder
+                : (root.tab === "bluetooth" ? btScan : scanPlaceholder)
         }
 
         // Bottom bar: tab switcher + power.
@@ -241,6 +264,24 @@ Item {
                 { icon: "\uf02b", value: root.btTypeLabel(dev.icon), label: "Device Type" }
             ] : []
             onActionClicked: root.subview = "scan"
+        }
+    }
+
+    Component {
+        id: btScan
+
+        BtDeviceList {
+            devices: root.btAdapter ? [...root.btAdapter.devices.values] : []
+            typeGlyph: root.btTypeGlyph
+            batteryText: root.batteryText
+            onDeviceClicked: device => {
+                if (device.connected)
+                    device.disconnect();
+                else if (device.paired)
+                    device.connect();
+                else
+                    device.pair();
+            }
         }
     }
 

@@ -219,21 +219,10 @@ Item {
     Component {
         id: connectivityPage
 
-        // Task 1 placeholder — Task 2 replaces this with ConnectivityView.
-        Item {
-            implicitWidth: 600
-            implicitHeight: 540
-            focus: true
-
-            Keys.onEscapePressed: root.page = "root"
-
-            Text {
-                anchors.centerIn: parent
-                text: "connectivity: " + root.connectivityTab
-                color: Theme.on_surface
-                font.family: Theme.fontFamily
-                font.pixelSize: 20
-            }
+        ConnectivityView {
+            tab: root.connectivityTab
+            onTabChanged: root.connectivityTab = tab
+            onBackRequested: root.page = "root"
         }
     }
 }

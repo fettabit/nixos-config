@@ -12,9 +12,15 @@ Item {
     property var batteryText: (d) => ""
     signal deviceClicked(var device)
 
-    readonly property var sorted: [...devices].sort((a, b) =>
-        (b.connected - a.connected) || (b.paired - a.paired)
-        || (a.name < b.name ? -1 : 1))
+    // BlueZ aliases unnamed devices to their address (dashes for colons) —
+    // hide those from the scan list (BLE noise), but never hide a paired
+    // or connected device.
+    readonly property var sorted: [...devices]
+        .filter(d => d.connected || d.paired
+            || (d.deviceName || d.name) !== d.address.replace(/:/g, "-"))
+        .sort((a, b) =>
+            (b.connected - a.connected) || (b.paired - a.paired)
+            || (a.name < b.name ? -1 : 1))
 
     ListView {
         anchors.fill: parent

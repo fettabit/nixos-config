@@ -3,7 +3,7 @@
     neovim
     vscode
     zotero
-    firefox
+    brave
     vesktop
     uv
     nodejs

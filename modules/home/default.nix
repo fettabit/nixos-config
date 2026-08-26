@@ -22,4 +22,8 @@
   home.homeDirectory = "/home/jftx";
   home.stateVersion = "26.05";
   home.sessionVariables.NIXOS_OZONE_WL = "1";
+  # environment.d, not shell init: uwsm session units and their children
+  # (Hyprland -> kitty -> shells) never source /etc/set-environment, so glibc
+  # needs TZDIR here to resolve IANA zone names (timedatectl et al.).
+  systemd.user.sessionVariables.TZDIR = "/etc/zoneinfo";
 }

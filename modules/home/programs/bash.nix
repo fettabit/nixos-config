@@ -11,6 +11,11 @@
     };
     initExtra = ''
       export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent"
+      # uwsm launches terminals into systemd scopes that inherit no TZDIR, so
+      # glibc can't resolve IANA zone names in the shell (timedatectl shows
+      # "(America, +0000)"). bashrc runs for every interactive shell — set it
+      # unconditionally here. /etc/zoneinfo is a stable symlink into tzdata.
+      export TZDIR="/etc/zoneinfo"
     '';
     profileExtra = ''
       if uwsm check may-start && [ "$XDG_VTNR" = 1 ]; then

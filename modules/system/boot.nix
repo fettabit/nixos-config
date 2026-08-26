@@ -21,6 +21,7 @@
 
   environment.systemPackages = [
     pkgs.sbctl
+    pkgs.efibootmgr
     # One command to land in Windows: firmware BootNext -> Windows Boot
     # Manager (its own ESP on nvme0n1 — sd-boot cannot list it), then reboot.
     (pkgs.writeShellApplication {

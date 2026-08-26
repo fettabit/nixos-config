@@ -38,20 +38,20 @@
 - Consumes: nothing.
 - Produces: branch `feat/secure-boot-lanzaboote`; issue number `#20` used by all later commits/PR.
 
-- [ ] **Step 1: Branch from origin/main**
+- [x] **Step 1: Branch from origin/main**
 
 ```bash
 git -C ~/nixos checkout -b feat/secure-boot-lanzaboote origin/main
 ```
 
-- [ ] **Step 2: Create the GitHub issue**
+- [x] **Step 2: Create the GitHub issue**
 
 ```bash
 gh issue create --title "Secure Boot via lanzaboote (BF6) — replace GRUB, add boot-windows helper" \
   --body "Migrate bootloader GRUB+os-prober -> lanzaboote-signed systemd-boot so firmware Secure Boot can be enabled (BF6 requires it). Windows keeps booting via firmware entry; new boot-windows command sets BootNext and reboots. Keys via sbctl (/var/lib/sbctl, never committed). Enrollment ALWAYS with --microsoft. Plan: docs/superpowers/plans/2026-08-26-secure-boot-lanzaboote.md"
 ```
 
-- [ ] **Step 3: Commit the plan doc**
+- [x] **Step 3: Commit the plan doc**
 
 ```bash
 git -C ~/nixos add docs/superpowers/plans/2026-08-26-secure-boot-lanzaboote.md
@@ -68,7 +68,7 @@ git -C ~/nixos commit -m "docs: secure boot lanzaboote implementation plan (#20)
 - Consumes: branch from Task 1.
 - Produces: `inputs.lanzaboote` (with `nixosModules.lanzaboote`) reachable in every system module via `specialArgs` — Task 3 imports it as `inputs.lanzaboote.nixosModules.lanzaboote`.
 
-- [ ] **Step 1: Add the input**
+- [x] **Step 1: Add the input**
 
 In `flake.nix`, after the `spicetify-nix` block (line 12), insert:
 
@@ -81,7 +81,7 @@ In `flake.nix`, after the `spicetify-nix` block (line 12), insert:
 
 No `outputs` signature change needed — modules receive it through `specialArgs = {inherit inputs;}`.
 
-- [ ] **Step 2: Lock and validate eval**
+- [x] **Step 2: Lock and validate eval**
 
 ```bash
 nix flake lock ~/nixos
@@ -90,7 +90,7 @@ nix flake check ~/nixos
 
 Expected: `flake.lock` gains a `lanzaboote` node (plus its own inner inputs); check passes. Note: v1.1.0's flake pins extra dev inputs (crane/rust-overlay or similar) — additional lock nodes are normal.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git -C ~/nixos add flake.nix flake.lock
@@ -106,7 +106,7 @@ git -C ~/nixos commit -m "feat: add lanzaboote flake input (#20)"
 - Consumes: `inputs.lanzaboote.nixosModules.lanzaboote` (Task 2).
 - Produces: system with `boot.lanzaboote` enabled, `sbctl` + `efibootmgr`-backed `boot-windows` on PATH. Runbook (Task 5) relies on commands `sbctl`, `boot-windows` existing after activation.
 
-- [ ] **Step 1: Rewrite `modules/system/boot.nix` to exactly:**
+- [x] **Step 1: Rewrite `modules/system/boot.nix` to exactly:**
 
 ```nix
 {
@@ -159,7 +159,7 @@ Notes for the implementer:
 - The `sudo` re-exec runs the *wrapper* script, so `runtimeInputs`' PATH entry (efibootmgr) survives into the root invocation.
 - `writeShellApplication` adds `set -euo pipefail` and runs shellcheck at build time — trb (Task 4) is what catches script errors, not flake check.
 
-- [ ] **Step 2: Validate eval**
+- [x] **Step 2: Validate eval**
 
 ```bash
 git -C ~/nixos add -A
@@ -168,7 +168,7 @@ nix flake check ~/nixos
 
 Expected: pass (see configurationLimit contingency above).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git -C ~/nixos add modules/system/boot.nix
@@ -183,7 +183,7 @@ git -C ~/nixos commit -m "feat: replace GRUB with lanzaboote secure boot + boot-
 - Consumes: Tasks 2–3 committed.
 - Produces: PR containing the runbook; a locally proven buildable system closure.
 
-- [ ] **Step 1: Full build (no activation)**
+- [x] **Step 1: Full build (no activation)**
 
 ```bash
 nixos-rebuild build --flake ~/nixos#blackgarden --sudo
@@ -191,7 +191,7 @@ nixos-rebuild build --flake ~/nixos#blackgarden --sudo
 
 Expected: builds to completion (first run compiles/fetches the lanzaboote toolchain — takes longer than usual). Shellcheck failures in `boot-windows` surface here; fix and re-commit if so.
 
-- [ ] **Step 2: Push and open PR**
+- [x] **Step 2: Push and open PR**
 
 ```bash
 git -C ~/nixos push -u origin feat/secure-boot-lanzaboote

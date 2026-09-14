@@ -1,42 +1,35 @@
-{
-  config,
-  pkgs,
-  ...
-}: let
-  # Runtime artifact written by matugen (see programs/matugen/config.toml);
-  # GTK ignores the @import while the file doesn't exist yet.
-  matugenGtkCss = ''@import url("file://${config.home.homeDirectory}/.cache/matugen/colors-gtk.css");'';
-in {
-  home.packages = with pkgs; [
-    libsForQt5.qt5ct
-    qt6Packages.qt6ct
-  ];
-
+{pkgs, ...}: {
+  # caelestia-cli owns the runtime theming: on every scheme apply it writes
+  # ~/.config/gtk-{3,4}.0/gtk.css, the dconf gtk-theme/color-scheme/icon-theme
+  # keys, and ~/.config/qtengine/{caelestia.colors,config.json}. Nothing here
+  # may own those paths or keys (an HM symlink or dconf write would fight it
+  # on every activation).
   gtk = {
     enable = true;
+    # caelestia writes the same theme name in both light and dark mode and
+    # recolours through gtk.css, so HM's derived dconf gtk-theme never disagrees.
     theme = {
       name = "adw-gtk3-dark";
       package = pkgs.adw-gtk3;
     };
-    iconTheme = {
-      name = "Adwaita";
-      package = pkgs.adwaita-icon-theme;
-    };
-    gtk3.extraCss = matugenGtkCss;
-    gtk4.extraCss = matugenGtkCss;
-    gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
-    gtk4.extraConfig.gtk-application-prefer-dark-theme = 1;
+    # No gtk.iconTheme: HM would also write dconf icon-theme=Papirus-Dark and
+    # undo caelestia's Papirus-Light in light mode. settings.ini only:
+    gtk3.extraConfig.gtk-icon-theme-name = "Papirus-Dark";
+    gtk4.extraConfig.gtk-icon-theme-name = "Papirus-Dark";
   };
 
-  # matugen-reload bounces these two keys to force live re-reads of the CSS.
-  dconf.settings."org/gnome/desktop/interface" = {
-    color-scheme = "prefer-dark";
-    gtk-theme = "adw-gtk3-dark";
-  };
-
-  # qt5ct/qt6ct read the matugen-generated color scheme + qss.
+  # qtengine reads caelestia's colour scheme; `name` is a free string here and
+  # qt.enable exports QT_PLUGIN_PATH for the profile so the plugin is found.
   qt = {
     enable = true;
-    platformTheme.name = "qt6ct";
+    platformTheme = {
+      name = "qtengine";
+      package = pkgs.qtengine;
+    };
   };
+
+  home.packages = [
+    pkgs.papirus-icon-theme
+    pkgs.darkly # Qt6 style named in caelestia's qtengine config
+  ];
 }

@@ -1,10 +1,8 @@
-{ pkgs, ... }:
-{
+{pkgs, ...}: {
   fonts.packages = with pkgs; [
+    # kitty's font (programs/kitty.nix). caelestia-shell ships its own
+    # fontconfig (Material Symbols, Rubik, CaskaydiaCove NF) — nothing here feeds it.
     nerd-fonts.jetbrains-mono
-    # the quickshell QML hardcodes these two family names
-    jetbrains-mono
-    nerd-fonts.iosevka
     (pkgs.stdenvNoCC.mkDerivation {
       name = "anthropic-fonts";
       src = ../../fonts/anthropic;

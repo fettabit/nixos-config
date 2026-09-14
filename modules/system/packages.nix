@@ -20,8 +20,6 @@
     nautilus
     fastfetch
     hyprpolkitagent
-    grim
-    slurp
     cmatrix
     pipes-rs
     tty-clock
@@ -29,11 +27,7 @@
     asciiquarium
     claude-code
     codex
-    awww
     celluloid
-    matugen
-    rofi
-    playerctl
     stylua
     alejandra
     networkmanagerapplet

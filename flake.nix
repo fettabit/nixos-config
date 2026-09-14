@@ -14,6 +14,13 @@
       url = "github:nix-community/lanzaboote/v1.1.0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Used only for homeManagerModules.default (programs.caelestia). The
+    # packages come from nixpkgs (modules/home/desktop/caelestia.nix), so
+    # this input's own quickshell/cli/m3shapes inputs are locked but never built.
+    caelestia-shell = {
+      url = "github:caelestia-dots/shell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {

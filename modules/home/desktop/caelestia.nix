@@ -66,6 +66,9 @@ in {
         commands.hibernate = ["suspend"];
         icons.hibernate = "bedtime";
       };
+      # Default is derived from the locale (en_US -> 12h); drives the bar,
+      # dashboard and lock-screen clocks together.
+      services.useTwelveHourClock = false;
       # Desktop: audio on, battery off. Whole list — EntryList replaces.
       bar.statusIcons = [
         {

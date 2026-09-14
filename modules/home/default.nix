@@ -9,13 +9,11 @@
     ./programs/kitty.nix
     ./programs/spicetify.nix
     ./programs/bash.nix
-    ./programs/matugen.nix
     ./programs/obs-studio.nix
     ./services/ssh-agent.nix
-    ./services/wallpaper.nix
     ./desktop/hyprland.nix
     ./desktop/theme.nix
-    ./desktop/quickshell.nix
+    ./desktop/caelestia.nix
   ];
 
   home.username = "jftx";

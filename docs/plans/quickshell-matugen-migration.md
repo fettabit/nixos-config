@@ -1,3 +1,5 @@
+> **SUPERSEDED (2026-09-14).** The island shell and the matugen pipeline this plan describes were replaced by caelestia shell — see `docs/superpowers/specs/2026-09-14-caelestia-shell-swap-design.md` (issue #24). Kept for history; the last island commit is tagged `island-final`.
+
 # Quickshell + Matugen Desktop Shell Migration
 
 **Status:** Track A (theming pipeline) **MERGED** — PR #8, squash `4556abf`, 2026-07-05. Track B **REVISED 2026-07-05, awaiting approval** — native Quickshell 0.3.0 rewrite; the reference repo is design inspiration only, none of its code is vendored. Revision decisions confirmed with jftx in the 2026-07-05 gap interview.

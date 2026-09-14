@@ -13,9 +13,8 @@
       enable_audio_bell = "no";
       tab_bar_style = "powerline";
     };
-    # Matugen-generated colors; regenerated on wallpaper change and
-    # applied live via SIGUSR1 from matugen-reload. Kitty warns but
-    # starts fine if the file doesn't exist yet.
-    extraConfig = "include /tmp/kitty-matugen-colors.conf";
+    # Colours come from caelestia-cli as OSC sequences written straight into
+    # every /dev/pts (live windows) and replayed by bash for new ones
+    # (programs/bash.nix) — no colour file to include.
   };
 }

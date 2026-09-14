@@ -3,8 +3,12 @@
 ----------------
 
 hl.config({
-    misc = {
-        force_default_wallpaper = -0,    -- Set to 0 or 1 to disable the anime mascot wallpapers
-        disable_hyprland_logo   = true, -- If true disables the random hyprland logo / anime girl background. :(
-    },
+	misc = {
+		force_default_wallpaper = 0, -- caelestia draws the wallpaper
+		disable_hyprland_logo = true,
+		-- If caelestia dies while the screen is locked, let a restarted
+		-- instance re-attach as the lock client instead of leaving a dead lock
+		-- (swap spec §3.7 runbook step 8).
+		allow_session_lock_restore = true,
+	},
 })

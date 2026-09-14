@@ -8,7 +8,8 @@
 
   users.users.jftx = {
     isNormalUser = true;
-    extraGroups = ["wheel" "gamemode"];
+    # i2c: DDC monitor brightness for caelestia (modules/system/hyprland.nix)
+    extraGroups = ["wheel" "gamemode" "i2c"];
     packages = [];
   };
 

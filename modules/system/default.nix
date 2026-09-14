@@ -9,5 +9,6 @@
     ./nix.nix
     ./gaming.nix
     ./packages.nix
+    ./hardening.nix
   ];
 }

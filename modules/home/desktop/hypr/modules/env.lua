@@ -2,8 +2,8 @@
 ---- ENVIRONMENT VARIABLES ----
 -------------------------------
 
-hl.env("XCURSOR_SIZE", "24")
-hl.env("HYPRCURSOR_SIZE", "24")
+-- Cursor theme/size come from home.pointerCursor (desktop/theme.nix) via the
+-- session environment (XCURSOR_THEME / XCURSOR_SIZE).
 
 -- toolkit backend
 hl.env("GDK_BACKEND", "wayland,x11,*")

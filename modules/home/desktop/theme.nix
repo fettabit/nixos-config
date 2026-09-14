@@ -28,6 +28,17 @@
     };
   };
 
+  # Cursor: HM exports XCURSOR_THEME/XCURSOR_SIZE, writes ~/.icons/default and
+  # the GTK settings + dconf cursor-theme (caelestia never touches that key).
+  # Hyprland reads XCURSOR_THEME itself; nixpkgs has no hyprcursor build of
+  # Bibata, so hyprcursor stays off rather than logging a fallback.
+  home.pointerCursor = {
+    package = pkgs.bibata-cursors;
+    name = "Bibata-Modern-Ice";
+    size = 24;
+    gtk.enable = true;
+  };
+
   home.packages = [
     pkgs.papirus-icon-theme
     pkgs.darkly # Qt6 style named in caelestia's qtengine config

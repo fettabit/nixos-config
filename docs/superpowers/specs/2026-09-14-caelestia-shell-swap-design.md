@@ -582,7 +582,10 @@ On disk (runbook, by hand; not repo-owned):
 4. `systemctl --user status caelestia` → active; left bar visible;
    `caelestia shell -s` lists IPC; `systemctl --user show-environment | grep
    HYPRLAND_INSTANCE_SIGNATURE` prints the current instance.
-5. **Bootstrap the scheme:** `caelestia wallpaper -f ~/wallpapers/moon.jpg`.
+5. **Bootstrap the scheme:** `caelestia scheme set -n dynamic` **once** (the
+   first-run scheme is the static `catppuccin/mocha`; wallpaper colours only
+   apply while the scheme name is `dynamic` — it persists in `scheme.json`),
+   then `caelestia wallpaper -f ~/wallpapers/moon.jpg`.
    Check in order: wallpaper fades in; bar recolours; open kitty windows
    recolour; `ls ~/.local/state/caelestia/` shows `scheme.json` +
    `sequences.txt`; `~/.config/hypr/scheme/current.lua` exists (**`.lua`, not
@@ -671,6 +674,25 @@ inert.
   them move together.
 - Fixing or removing the dead `system.autoUpgrade` block in `boot.nix`.
 - Deleting `feat/cc-calendar-weather`.
+
+---
+
+## 4b. Post-activation findings (2026-09-14, activated ~16:40)
+
+- `rb` + reboot were clean; `caelestia.service` active; cascade verified live
+  (borders, GTK, Qt, kitty) after the scheme bootstrap.
+- **Dynamic scheme is opt-in:** the CLI's first-run scheme is `catppuccin/mocha`;
+  `caelestia wallpaper -f` only derives colours while `scheme.name == "dynamic"`.
+  Runbook step 5 now starts with `caelestia scheme set -n dynamic`.
+- **"Failed to save config … Read-only file system" toast on every shell start:**
+  a 2.3.0 bug — the config auto-save hook treats the initial load as an edit and
+  rewrites `shell.json`, which is a read-only store symlink here. Fixed upstream
+  in the 2.4.0 config rewrite (#1861); nixpkgs master has 2.4.0, `nixos-unstable`
+  still 2.3.0 at the time of writing. All keys and shortcut names used by this
+  config were re-verified against the v2.4.0 tarball, so the fix is a plain
+  `nix flake update` + `rb` once the channel advances. Not worked around.
+- Benign unit-log WARNs: UPower not enabled (no battery), portal app-ID
+  registration, `shell.json` write (above).
 
 ---
 

@@ -210,6 +210,26 @@ in {
     pkgs.ddcutil # `ddcutil detect` in the brightness runbook check (the shell wrapper has its own copy)
   ];
 
+  # Clipboard history is fed by autostart.lua (cliphist -max-items 50) and
+  # would otherwise persist every copy — passwords included — across logins
+  # in ~/.cache/cliphist/db. Wipe it when the session ends (PartOf stops this
+  # unit with graphical-session.target) and again at start, for the
+  # hard-power-off case where ExecStop never ran.
+  systemd.user.services.cliphist-wipe = {
+    Unit = {
+      Description = "wipe clipboard history at session start and end";
+      PartOf = ["graphical-session.target"];
+      After = ["graphical-session.target"];
+    };
+    Service = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.cliphist}/bin/cliphist wipe";
+      ExecStop = "${pkgs.cliphist}/bin/cliphist wipe";
+    };
+    Install.WantedBy = ["graphical-session.target"];
+  };
+
   # swappy (ALT+SHIFT+S annotate) saves to ~/Desktop by default.
   xdg.configFile."swappy/config".text = ''
     [Default]

@@ -19,6 +19,14 @@
     configurationLimit = 5;
   };
 
+  # The generated hardware-configuration.nix mounts the ESP world-readable
+  # (fmask/dmask=0022); systemd-boot logs "random seed file is world
+  # accessible, which is a security hole" every boot and any local process can
+  # read the signed kernels. Root-only is enough: lanzaboote, sbctl and
+  # boot-windows all run as root. mkForce replaces the generated list rather
+  # than appending conflicting masks.
+  fileSystems."/boot".options = lib.mkForce ["fmask=0077" "dmask=0077"];
+
   environment.systemPackages = [
     pkgs.sbctl
     pkgs.efibootmgr

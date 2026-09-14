@@ -33,6 +33,7 @@
   # Hyprland reads XCURSOR_THEME itself; nixpkgs has no hyprcursor build of
   # Bibata, so hyprcursor stays off rather than logging a fallback.
   home.pointerCursor = {
+    enable = true;
     package = pkgs.bibata-cursors;
     name = "Bibata-Modern-Ice";
     size = 24;

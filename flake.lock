@@ -34,11 +34,11 @@
         "quickshell": "quickshell"
       },
       "locked": {
-        "lastModified": 1789393226,
-        "narHash": "sha256-VdjqnReCAOZCWnHsvRQb7kPPaTHcyP02vBsT7jeKrFY=",
+        "lastModified": 1789485056,
+        "narHash": "sha256-mycjbTVmG75eZkZoxdEVFzHQo7z6a0QlGnmCejaF6NA=",
         "owner": "caelestia-dots",
         "repo": "shell",
-        "rev": "b70c702b6d49c96a17723adf2fd5fdea2bf606e9",
+        "rev": "0f1435a2f5f0c6ad25a2858f282eee1a0453d8b0",
         "type": "github"
       },
       "original": {
@@ -107,11 +107,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1789386765,
-        "narHash": "sha256-4hyLFBhzQC7+qPMELWc7J/sbdA6ckXZxXU9CYRsGhsc=",
+        "lastModified": 1789482455,
+        "narHash": "sha256-pD3qVlQ4mUCFoTWrYtxecpSitQMsgJvJIN0FUIDZoEU=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "87c391f49a34660de6010f35bb50fb1bf811be9f",
+        "rev": "efa3ccb4c3cc90d832eab232976379058fa75aa3",
         "type": "github"
       },
       "original": {
@@ -172,7 +172,7 @@
         "narHash": "sha256-3i80JnZ9pZ7tWReb/Sqpc32cfzffCu8TWLnbnH0hN9c=",
         "rev": "ef34387ddd751e1ab8857adf4676492d32eb24ec",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/unstable/nixos-26.11pre1073009.ef34387ddd75/nixexprs.tar.xz"
+        "url": "https://releases.nixos.org/nixos/unstable/nixos-26.11pre1073009.ef34387ddd75/nixexprs.tar.zst"
       },
       "original": {
         "id": "nixpkgs",

@@ -19,6 +19,10 @@
     python3
     nautilus
     fastfetch
+    proton-vpn
+    proton-pass
+    proton-vpn-cli
+    proton-pass-cli
     hyprpolkitagent
     cmatrix
     pipes-rs

@@ -19,8 +19,10 @@
     python3
     nautilus
     fastfetch
+    proton-cli
     proton-vpn
     proton-pass
+    protonmail-desktop
     proton-vpn-cli
     proton-pass-cli
     hyprpolkitagent

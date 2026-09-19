@@ -23,10 +23,5 @@
       if [ -t 1 ] && [ -f "$_cs" ]; then cat "$_cs"; fi
       unset _cs
     '';
-    profileExtra = ''
-      if uwsm check may-start && [ "$XDG_VTNR" = 1 ]; then
-          exec uwsm start hyprland-uwsm.desktop
-      fi
-    '';
   };
 }

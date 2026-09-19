@@ -4,6 +4,7 @@
     ./audio.nix
     ./graphics.nix
     ./hyprland.nix
+    ./login.nix
     ./fonts.nix
     ./network.nix
     ./nix.nix

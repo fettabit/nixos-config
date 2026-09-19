@@ -80,10 +80,17 @@ can be executed without the chat history.
   # service; greetd's PAM service is a substack of `login`, so the keyring is
   # created on first login and unlocked with the login password from then on.
   services.gnome.gnome-keyring.enable = true;
+
+  # secret-tool: inspect/verify what lives in the keyring
+  # (`secret-tool search --all service Proton`). The spec's runbook relies on
+  # it; nothing else in the system pulls libsecret's CLI in.
+  environment.systemPackages = [pkgs.libsecret];
 }
 ```
 
 `modules/system/default.nix` imports `./login.nix`. `--remember` writes the last user to `/var/cache/tuigreet` (created by the module). No `--sessions` flag: a single fixed command mirrors today's behaviour; a session menu can come later if a second compositor ever appears.
+
+`pkgs.libsecret` is installed from the same file so `secret-tool` can inspect the keyring (§3.4 step 5).
 
 ### 3.2 Removals
 
@@ -110,20 +117,20 @@ can be executed without the chat history.
 
 ### 3.5 Verification, activation, rollback
 
-**Before `rb` (Claude):** `git add` new files, `nix flake check`, `trb` (`nixos-rebuild build`) — both green. Diff reviewed: exactly `login.nix` (+), `default.nix` (+1 import), `hyprland.nix` (−1), `bash.nix` (−5), CLAUDE.md, this spec, plan.
+**Before activation (Claude):** `git add` new files, `nix flake check`, `trb` (`nixos-rebuild build`) — both green. Diff reviewed: exactly `login.nix` (+), `default.nix` (+1 import), `hyprland.nix` (−1), `bash.nix` (−5), CLAUDE.md, this spec, plan.
 
 **Pre-flight (jftx):** `sudo -k && sudo true` — confirm the password is known; greetd will demand it.
 
-**Activation (jftx):** `rb`, then **reboot**. `rb` alone is not enough: getty still holds TTY1 until the unit graph is re-evaluated at boot, and the `profileExtra` removal only matters for new shells.
+**Activation (jftx):** `nixos-rebuild boot --flake ~/nixos#blackgarden --sudo && reboot`. **Not `rb`:** a live `switch` starts the new greetd unit immediately; it `Conflicts=getty@tty1.service` and opens VT1 with TTY reset/hangup while the running Hyprland session is displayed there. `boot` installs the generation (lanzaboote signs it as usual) and makes it the default without activating anything; the reboot does the switch. The `profileExtra` removal only matters for new logins.
 
-**Expected after reboot:** tuigreet on VT1 with clock; username pre-filled after the first `--remember`; password → Hyprland + caelestia exactly as before; `loginctl` shows one `seat0` session of type `wayland` for jftx; `systemctl --user status caelestia` active; `pgrep -a gnome-keyring-daemon` shows `--daemonize --login` (PAM-started) with `secrets` component. Then §3.4.
+**Expected after reboot:** tuigreet on VT1 with clock; username pre-filled after the first `--remember`; password → Hyprland + caelestia exactly as before; `loginctl` shows one `seat0` session of type `wayland` for jftx; `systemctl --user status caelestia` active; `pgrep -af gnome-keyring-daemon` shows `--daemonize --login` (PAM-started) with `secrets` component. Then §3.4.
 
 **Escape hatch:** if the greeter fails or the session never starts: CTRL+ALT+F2 → getty `login:` → jftx → `sudo nixos-rebuild switch --rollback` → `reboot`. Previous generation still has autologin, so this is always recoverable from the keyboard. Secure Boot is unaffected (lanzaboote signs every generation).
 
 **Risks:**
 - Login password ≠ keyring password after a future `passwd` change → PAM cannot unlock, the `gcr` prompter asks for the *old* password at first secret access. Remedy without seahorse: `rm ~/.local/share/keyrings/login.keyring`, log out/in (PAM recreates it with the new password), then re-sign-in to Proton (§3.4 steps 2–3). Documented, not mitigated.
 - tuigreet `--remember` needs `/var/cache/tuigreet` writable by `greeter` — module tmpfiles handles it; verify on first boot.
-- `rb`'s alias tail (`hyprctl reload && systemctl --user restart caelestia`) runs inside the still-autologged session — fine, same as every rebuild.
+- Activating with `rb`/`switch` instead of `boot` would start greetd under the live session (see Activation). Documented in CLAUDE.md's Key Commands so it is not repeated on later `login.nix` edits.
 
 ### 3.6 Docs
 

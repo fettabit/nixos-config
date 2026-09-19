@@ -284,8 +284,10 @@ with
 Directly under the line `# Activation is jftx's call — Claude validates, then asks him to run rb and paste output.` add:
 
 ```
-# Changes to modules/system/login.nix (greetd, PAM, keyring) need a reboot
-# after rb: greetd takes VT1 over from getty only at boot.
+# Changes to modules/system/login.nix (greetd, PAM, keyring): do NOT use rb.
+# A live switch starts greetd at once; it Conflicts= getty@tty1 and grabs VT1
+# under the running Hyprland session. Use the boot variant, then reboot:
+#   nixos-rebuild boot --flake ~/nixos#blackgarden --sudo && reboot
 ```
 
 - [ ] **Step 4: Layout list (line 42)**
@@ -348,7 +350,7 @@ Expected: first grep prints `clean`; second prints `4` or more.
 
 ### Task 4: Full build, closure assertions, PR
 
-Implements spec §3.5 "Before `rb`". This is the only step that catches what evaluation cannot (unit files, PAM files, D-Bus service files are materialised here).
+Implements spec §3.5 "Before activation". This is the only step that catches what evaluation cannot (unit files, PAM files, D-Bus service files are materialised here).
 
 **Files:** none modified. Read-only checks against the build output.
 
@@ -392,7 +394,7 @@ HF=$(nix-store -qR $R | grep -m1 -- '-home-manager-files$')
 grep -n 'uwsm' "$HF/.profile" || echo "OK no uwsm in .profile"
 ```
 
-Expected, line by line: `OK greetd cmd`, `OK vt1`, `OK greeter user`; `Restart=on-success`, `TTYPath=/dev/tty1`, `TTYReset=true`; `/dev/null`; `OK no autologin`; three `pam_gnome_keyring.so` lines in `login` — `auth optional`, `password optional … use_authtok` (keeps the keyring password in sync when it is changed through PAM/`passwd`), `session optional … auto_start`; substack/include lines in `greetd`; `org.freedesktop.secrets.service` (and `org.gnome.keyring.service`); `Exec=…/uwsm start -e -D Hyprland hyprland.desktop`; `OK no uwsm in .profile`.
+Expected, line by line: `OK greetd cmd`, `OK vt1`, `OK greeter user`; `Restart=on-success`, `TTYPath=/dev/tty1`, `TTYReset=true`; `/dev/null`; `OK no autologin`; three `pam_gnome_keyring.so` lines in `login` — `auth optional`, `password optional … use_authtok` (present in the generated stack; it does **not** sync the keyring on `passwd` — that service has no keyring hook and `login`'s sufficient `pam_unix` rule short-circuits first), `session optional … auto_start`; substack/include lines in `greetd`; `org.freedesktop.secrets.service` (and `org.gnome.keyring.service`); `Exec=…/uwsm start -e -D Hyprland hyprland.desktop`; `OK no uwsm in .profile`.
 
 If any assertion fails, stop — do not open the PR — and fix the corresponding task.
 
@@ -416,7 +418,7 @@ Physical-access gate (hardening finding #1, parked 2026-09-14) and a real `org.f
 `nix flake check` ✓, `nixos-rebuild build` ✓, closure assertions ✓ (greetd config/unit, `autovt@tty1` masked, no `--autologin` anywhere, `pam_gnome_keyring` in `login`, `org.freedesktop.secrets.service` present).
 
 ## Activation (jftx)
-`sudo -k && sudo true` (know your password) → `rb` → **reboot** → spec §3.5 checks → Proton migration §3.4. Escape hatch: CTRL+ALT+F2 → `sudo nixos-rebuild switch --rollback` → reboot.
+`sudo -k && sudo true` (know your password) → `nixos-rebuild boot --flake ~/nixos#blackgarden --sudo` → **reboot** → spec §3.5 checks → Proton migration §3.4. Escape hatch: CTRL+ALT+F2 → `sudo nixos-rebuild switch --rollback` → reboot.
 
 Out of scope: LUKS (separate track), idle auto-lock (declined), Proton Pass override (waiting on nixpkgs), VPN tunnel test vs rp_filter/DoT.
 
@@ -437,10 +439,11 @@ Implements spec §3.4, §3.5. **Claude does not run any of the commands in Steps
 
 ```bash
 sudo -k && sudo true        # prompts for the password — this is the same password greetd will ask for
-rb                          # nixos-rebuild switch … && hyprctl reload && systemctl --user restart caelestia
+nixos-rebuild boot --flake ~/nixos#blackgarden --sudo   # NOT rb: a live switch starts greetd under the running session
+reboot
 ```
 
-Expected: activation succeeds; the `rb` tail may print a warning about greetd/getty units changing — expected. **Then reboot.**
+Expected: the boot entry is installed (lanzaboote signs it); nothing changes in the live session. **Then reboot.**
 
 - [ ] **Step 2 (jftx): first login**
 
@@ -452,7 +455,7 @@ Expected on VT1: tuigreet with a clock; username field (pre-filled from the seco
 loginctl list-sessions
 loginctl show-session "$(loginctl list-sessions --no-legend | awk '$3=="jftx"{print $1; exit}')" -p Type -p Service -p TTY
 systemctl --user is-active caelestia
-pgrep -a gnome-keyring-daemon
+pgrep -af gnome-keyring-daemon
 busctl --user list | grep -iE 'secrets|keyring'
 ls -la ~/.local/share/keyrings/
 ls -la /var/cache/tuigreet/

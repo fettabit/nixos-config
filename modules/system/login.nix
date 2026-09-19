@@ -17,4 +17,9 @@
   # `login`, so the keyring is created on first login and unlocked with the
   # login password from then on — no extra PAM config.
   services.gnome.gnome-keyring.enable = true;
+
+  # secret-tool: inspect/verify what lives in the keyring
+  # (`secret-tool search --all service Proton`). The spec's runbook relies on
+  # it; nothing else in the system pulls libsecret's CLI in.
+  environment.systemPackages = [pkgs.libsecret];
 }

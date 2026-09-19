@@ -466,7 +466,7 @@ Expected: one session, `Type=wayland`, `Service=greetd`, `TTY=tty1`; `active`; a
 - [ ] **Step 4 (jftx): Proton migration — paste the output**
 
 ```bash
-protonvpn signout && protonvpn signin              # follow the prompts
+protonvpn signout && protonvpn signin <account-email>   # username argument is mandatory; then the password prompt
 protonvpn status                                   # must print NO "--- Logging error ---"
 protonvpn-app &                                    # sign out, sign back in, close
 rm -v ~/.config/Proton/keyring-proton-sso-*.json

@@ -109,7 +109,7 @@ can be executed without the chat history.
 ### 3.4 Proton migration (runbook, post-activation)
 
 1. In a terminal: `busctl --user list | grep -i secrets` → `org.freedesktop.secrets` owned by `gnome-keyring-daemon`.
-2. `protonvpn signout && protonvpn signin` → session lands in the keyring. `protonvpn status` prints **no** `--- Logging error ---`.
+2. `protonvpn signout && protonvpn signin <account email>` (the username argument is mandatory) → session lands in the keyring. `protonvpn status` prints **no** `--- Logging error ---`.
 3. Open `protonvpn-app`, sign out/in once so the GUI's copy migrates too.
 4. `rm ~/.config/Proton/keyring-proton-sso-*.json` — the fallback files stay on disk otherwise.
 5. `secret-tool search --all service Proton` lists the entries (proton-keyring-linux stores under `KEYRING_SERVICE = "Proton"`, usernames `proton-sso-accounts` / `proton-sso-account-<id>`); `ls ~/.local/share/keyrings/` shows `login.keyring`.
@@ -136,6 +136,15 @@ can be executed without the chat history.
 
 - **CLAUDE.md:** Overview sentence ("getty autologin to user jftx" → "greetd/tuigreet login on VT1, gnome-keyring unlocked at login"); `modules/system` file list + `login.nix` row in "Where to make a change"; `hyprland.nix` description loses "getty autologin"; Architecture Notes "Hyprland" bullet: autostart paragraph rewritten; new "Login & keyring" bullet with the Proton keyring consequence and the `signout/signin` migration note; Proton packages mentioned with their binary names.
 - **Memory** (`proton-suite.md`, index): status → in flight, #29.
+
+## 4b. Post-activation findings (2026-09-18, activated 23:31 EDT)
+
+- **Activated:** `a802fa6` via `nixos-rebuild boot --flake ~/nixos#blackgarden --sudo` + reboot (not `rb`, per §3.5). Greeter/login: tuigreet came up on VT1 and login worked first try; `loginctl` shows one `seat0` session, `Service=greetd`, `Type=wayland`, `TTY=tty1`; caelestia active; `/var/cache/tuigreet/lastuser` written by `greeter`. **Deviation:** kernel USB errors (`usb 4-2 … error -71`, a USB3 hub retrying enumeration at 7–8 s, console loglevel 4) were printed over tuigreet's input box. Cosmetic; tracked as #31 (`boot.consoleLogLevel = 2` + a nicer greeter).
+- **Keyring:** `gnome-keyring-daemon --daemonize --login` (PAM-started, pid 1389); `org.freedesktop.secrets` and `org.gnome.keyring` owned by it on the session bus; `~/.local/share/keyrings/login.keyring` + `user.keystore` created at first login.
+- **Proton:** `protonvpn signin` requires the account email as an argument (runbook corrected). After sign-in, `protonvpn status` prints **no** `--- Logging error ---`. `secret-tool search --all service Proton` lists `proton-sso-accounts` and `proton-sso-account-<id>` (created 03:47:47Z). The GUI picked the keyring session up without a re-login (shared proton-core SSO store). JSON fallback files removed; `~/.config/Proton/` holds only `VPN/`. **Pass/Mail re-login check not yet done** (stopped for the night) — expected one-time re-login, verify next session.
+- **Unplanned tunnel attempt:** the GUI had `connect_at_app_startup: "US"` set and auto-dialled on launch; it stalled in `Connecting` with no NetworkManager activity because **no polkit authentication agent runs in the session** (`hyprpolkitagent.service` is `linked-runtime ignored`; NM `settings.modify.system` needs `auth`). jftx disconnected and quit; clean state confirmed (no wg link, no `pvpn-*` profile, default route via the router). Tracked as #33 — prerequisite for the tunnel track. Recommend turning "Auto connect" off in the GUI until then.
+- **Found in the boot journal, unrelated to this PR:** NetworkManager rejects `ipv4/ipv6.ignore-auto-dns` in `[connection]` (`config: unknown key`), so `network.nix`'s intent never applied — the router `192.168.1.1` is a DNS server on `enp8s0` (strict DoT still prevents plaintext queries). The active wired profile after reboot is `Wired connection 2`. Tracked as #32.
+- Other §3.5 expectations met with no deviation.
 
 ## 4. Out of scope / follow-ups (not in this PR)
 

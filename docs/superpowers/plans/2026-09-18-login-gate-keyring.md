@@ -364,10 +364,14 @@ Expected: exit 0, `./result` symlink present in `~/nixos`. (Takes a few minutes;
 
 ```bash
 R=~/nixos/result
-# greetd config: tuigreet with the exact uwsm command, on vt 1, as user greeter
-cat $R/etc/greetd/config.toml
-grep -q "tuigreet --time --remember --cmd 'uwsm start hyprland-uwsm.desktop'" $R/etc/greetd/config.toml && echo "OK greetd cmd"
-grep -q '^vt = 1' $R/etc/greetd/config.toml && echo "OK vt1"
+# greetd config: tuigreet with the exact uwsm command, on vt 1, as user greeter.
+# The module hands greetd its TOML via `--config <store path>` on ExecStart
+# (there is no /etc/greetd/), so resolve it from the unit file.
+CFG=$(grep -oE '/nix/store/[^ ]+-greetd\.toml' $R/etc/systemd/system/greetd.service | head -1)
+cat "$CFG"
+grep -q "tuigreet --time --remember --cmd 'uwsm start hyprland-uwsm.desktop'" "$CFG" && echo "OK greetd cmd"
+grep -q '^vt = 1' "$CFG" && echo "OK vt1"
+grep -q '^user = "greeter"' "$CFG" && echo "OK greeter user"
 # greetd owns tty1 (useTextGreeter) and autovt@tty1 is masked
 grep -E 'TTYPath|TTYReset|Restart=' $R/etc/systemd/system/greetd.service
 readlink -f $R/etc/systemd/system/autovt@tty1.service       # -> /dev/null
@@ -388,7 +392,7 @@ HF=$(nix-store -qR $R | grep -m1 -- '-home-manager-files$')
 grep -n 'uwsm' "$HF/.profile" || echo "OK no uwsm in .profile"
 ```
 
-Expected, line by line: `OK greetd cmd`, `OK vt1`; `TTYPath=/dev/tty1`, `TTYReset=yes`, `Restart=on-success`; `/dev/null`; `OK no autologin`; two `pam_gnome_keyring.so` lines (auth + session) in `login`; substack/include lines in `greetd`; `org.freedesktop.secrets.service` (and `org.gnome.keyring.service`); `Exec=…/uwsm start -e -D Hyprland hyprland.desktop`; `OK no uwsm in .profile`.
+Expected, line by line: `OK greetd cmd`, `OK vt1`, `OK greeter user`; `Restart=on-success`, `TTYPath=/dev/tty1`, `TTYReset=true`; `/dev/null`; `OK no autologin`; three `pam_gnome_keyring.so` lines in `login` — `auth optional`, `password optional … use_authtok` (keeps the keyring password in sync when it is changed through PAM/`passwd`), `session optional … auto_start`; substack/include lines in `greetd`; `org.freedesktop.secrets.service` (and `org.gnome.keyring.service`); `Exec=…/uwsm start -e -D Hyprland hyprland.desktop`; `OK no uwsm in .profile`.
 
 If any assertion fails, stop — do not open the PR — and fix the corresponding task.
 

@@ -1,9 +1,10 @@
-{...}: {
+{config, ...}: {
   # Primary browser (#39). Brave stays in packages.nix as the Chromium fallback.
   #
   # Two declarative surfaces, both owned here:
-  #  - `settings` -> ~/.librewolf/librewolf.overrides.cfg, which LibreWolf's own
-  #    librewolf.cfg loads last, so a defaultPref here beats LibreWolf's default.
+  #  - `settings` -> librewolf.overrides.cfg, which LibreWolf loads last, so a
+  #    defaultPref here beats LibreWolf's default (a pref changed in the UI is a
+  #    user_pref and beats both -- reset it in about:config to get ours back).
   #    Anything not listed stays LibreWolf stock (strict ETP, GPC, HTTPS-only,
   #    DoH off so resolved's DoT stays in charge, disk cache off, DuckDuckGo).
   #  - `policies` -> distribution/policies.json in the wrapped package. nixpkgs
@@ -40,6 +41,11 @@
 
       # AMD hardware video decode on Wayland.
       "media.ffmpeg.vaapi.enabled" = true;
+
+      # Vertical tabs in a sidebar that stays collapsed until hovered.
+      "sidebar.revamp" = true;
+      "sidebar.verticalTabs" = true;
+      "sidebar.visibility" = "expand-on-hover";
     };
 
     policies.ExtensionSettings = {
@@ -50,4 +56,13 @@
       };
     };
   };
+
+  # Firefox 156 moved to XDG paths (widget.support-xdg-config): the profile
+  # lives under ~/.config/librewolf/librewolf/ and LibreWolf's
+  # patches/profile-directory.patch reads the overrides from there too. The HM
+  # module still writes only the legacy ~/.librewolf/ path, so link the same
+  # generated file where it is actually read. When HM catches up this will
+  # collide at eval time -- then delete it.
+  xdg.configFile."librewolf/librewolf/librewolf.overrides.cfg".source =
+    config.home.file.".librewolf/librewolf.overrides.cfg".source;
 }

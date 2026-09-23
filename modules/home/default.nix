@@ -11,7 +11,6 @@
     ./programs/bash.nix
     ./programs/obs-studio.nix
     ./programs/proton-vpn.nix
-    ./programs/librewolf.nix
     ./services/ssh-agent.nix
     ./desktop/hyprland.nix
     ./desktop/theme.nix

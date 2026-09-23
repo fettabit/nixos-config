@@ -4,6 +4,7 @@
     vscode
     zotero
     brave
+    obsidian
     vesktop
     uv
     nodejs

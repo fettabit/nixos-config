@@ -7,12 +7,19 @@
   xdg.mimeApps = {
     enable = true;
     defaultApplications = let
-      browser = "librewolf.desktop";
+      # Brave is the only browser (#41). It stays a plain package in
+      # packages.nix -- nothing about it is declarative except this default.
+      browser = "brave-browser.desktop";
     in {
       "x-scheme-handler/http" = browser;
       "x-scheme-handler/https" = browser;
       "text/html" = browser;
       "application/xhtml+xml" = browser;
+
+      # Obsidian ships MimeType=x-scheme-handler/obsidian in its own desktop
+      # entry, but this file is a store symlink, so obsidian:// deep links only
+      # resolve if the handler is declared here.
+      "x-scheme-handler/obsidian" = "obsidian.desktop";
 
       # Carried over from the previous unmanaged file.
       "x-scheme-handler/discord" = "vesktop.desktop";

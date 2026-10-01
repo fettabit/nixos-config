@@ -2,7 +2,6 @@
   home.packages = with pkgs; [
     neovim
     vscode
-    zotero
     brave
     obsidian
     vesktop

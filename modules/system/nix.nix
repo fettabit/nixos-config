@@ -9,6 +9,11 @@
     builtins.elem (lib.getName pkg) [
       "pnpm"
     ];
+  # nixpkgs (2026-11) marks gtk2 broken as a deprecation flag ahead of its
+  # removal before 27.05 (NixOS/nixpkgs#410814). lutris' FHS env still lists
+  # gtk2, which blocks the whole system build. "warn" lets only gtk2 through;
+  # drop this once nixpkgs' lutris stops pulling it in.
+  nixpkgs.config.problems.handlers."gtk+".broken = "warn";
   # nixos-upgrade.service runs as root; libgit2 refuses to open the checkout in
   # /home/jftx ("repository path is not owned by current user"), which is why
   # this silently never worked when it pointed at ~/nixos. Building from the

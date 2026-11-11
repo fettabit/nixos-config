@@ -10,6 +10,7 @@
     ./nix.nix
     ./gaming.nix
     ./packages.nix
+    ./flatpak.nix
     ./hardening.nix
   ];
 }

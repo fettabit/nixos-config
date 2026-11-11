@@ -7,9 +7,11 @@
   xdg.mimeApps = {
     enable = true;
     defaultApplications = let
-      # Brave is the only browser (#41). It stays a plain package in
-      # packages.nix -- nothing about it is declarative except this default.
-      browser = "brave-browser.desktop";
+      # Brave is the only browser (#41). Since #47 it is the Flathub app
+      # (modules/system/flatpak.nix; nixpkgs dropped `brave`), whose entry is
+      # exported as com.brave.Browser.desktop. Nothing else about it is
+      # declarative except this default.
+      browser = "com.brave.Browser.desktop";
     in {
       "x-scheme-handler/http" = browser;
       "x-scheme-handler/https" = browser;
